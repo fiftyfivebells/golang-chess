@@ -1,6 +1,12 @@
-package engine
+package board
 
 type Bitboard uint64
+
+var SquareMasks [64]Bitboard
+
+func (bb *Bitboard) setBitAtSquare(square uint8) {
+
+}
 
 const (
 	InitialStateFenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -36,7 +42,9 @@ func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 }
 
 func (b *BitboardBoard) GetFENRepresentation() string {
-	return "fen rep"
+	fenString := ""
+
+	return fenString
 }
 
 func (b *BitboardBoard) SetPieceAtPosition(p Piece, coord string) {

@@ -1,4 +1,4 @@
-package engine
+package board
 
 type Board interface {
 	SetBoardFromFEN(fen string)
