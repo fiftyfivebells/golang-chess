@@ -1,13 +1,14 @@
 package board
 
 import (
+	"nsdb-go-edition/engine"
 	"testing"
 )
 
 func TestBoardFromFEN(t *testing.T) {
 	type BoardFromFenTestCase struct {
 		position string
-		expected Piece
+		expected engine.Piece
 	}
 
 	board := BitboardBoard{}
@@ -18,19 +19,31 @@ func TestBoardFromFEN(t *testing.T) {
 		testCases := []BoardFromFenTestCase{
 			{
 				"a1",
-				Piece{Rook, White},
+				engine.Piece{
+					PieceType: engine.Rook,
+					Color:     engine.White,
+				},
 			},
 			{
 				"e1",
-				Piece{King, White},
+				engine.Piece{
+					PieceType: engine.King,
+					Color:     engine.White,
+				},
 			},
 			{
 				"e8",
-				Piece{King, Black},
+				engine.Piece{
+					PieceType: engine.King,
+					Color:     engine.Black,
+				},
 			},
 			{
 				"e4",
-				Piece{None, Blank},
+				engine.Piece{
+					PieceType: engine.None,
+					Color:     engine.Blank,
+				},
 			},
 		}
 
@@ -44,7 +57,7 @@ func TestBoardFromFEN(t *testing.T) {
 
 			piece := testCase.expected
 			// I only want to check the bitboards if the piece is a real piece
-			if piece.PieceType != None {
+			if piece.PieceType != engine.None {
 				bit := board.pieces[piece.Color][piece.PieceType] & (1 << index)
 
 				if bit == 0 {

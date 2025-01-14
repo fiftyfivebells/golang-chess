@@ -1,64 +1,44 @@
 package board
 
+import "fmt"
+
 type Bitboard uint64
 
 var SquareMasks [64]Bitboard
 
-func (bb *Bitboard) setBitAtSquare(square uint8) {
-
+func (bb *Bitboard) setBitAtSquare(square byte) {
+	*bb |= SquareMasks[square]
 }
 
-const (
-	InitialStateFenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-)
-
-type BitboardBoard struct {
-	pieces  [2][6]Bitboard
-	squares [64]Piece
+func (bb *Bitboard) clearBitAtSquare(square byte) {
+	*bb &= ^SquareMasks[square]
 }
 
-func (b *BitboardBoard) SetBoardFromFEN(fen string) {
-	for i := range b.squares {
-		b.squares[i] = Piece{None, Blank}
-	}
-
-	for i, square := 0, byte(56); i < len(fen); i++ {
-		char := fen[i]
-		switch char {
-		case 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k':
-			piece := CharToPiece[char]
-
-			pieceMask := 1 << square
-			b.pieces[piece.Color][piece.PieceType] |= Bitboard(pieceMask)
-
-			b.squares[square] = piece
-			square++
-		case '/':
-			square -= 16
-		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			square += fen[i] - '0'
+func (bb Bitboard) String() string {
+	bits := fmt.Sprintf("%064b\n", bb)
+	bbString := ""
+	for rank := 56; rank > -1; rank -= 8 {
+		bbString += fmt.Sprintf("%v | ", (rank/8)+1)
+		for i := rank; i < rank+8; i++ {
+			square := bits[i]
+			if square == '0' {
+				square = '.'
+			}
+			bbString += fmt.Sprintf("%c ", square)
 		}
+		bbString += "\n"
 	}
+
+	bbString += "   ----------------"
+	bbString += "\n    a b c d e f g h\n"
+
+	return bbString
 }
 
-func (b *BitboardBoard) GetFENRepresentation() string {
-	fenString := ""
+func InitializeBitMasks() {
+	for i := 0; i < len(SquareMasks); i++ {
+		pieceIndex := len(SquareMasks) - 1 - i
+		SquareMasks[pieceIndex] = Bitboard(1) << i
+	}
 
-	return fenString
-}
-
-func (b *BitboardBoard) SetPieceAtPosition(p Piece, coord string) {
-	boardIndex := CoordToBoardIndex(coord)
-	b.squares[boardIndex] = p
-
-	pieceMask := 1 << boardIndex
-
-	color := p.Color
-	pieceType := p.PieceType
-
-	b.pieces[color][pieceType] |= Bitboard(pieceMask)
-}
-
-func (b *BitboardBoard) GetPieceAtSquare(sq byte) Piece {
-	return b.squares[sq]
 }
