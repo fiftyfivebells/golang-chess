@@ -1,4 +1,4 @@
-hpackage board
+package board
 
 import (
 	"fmt"
