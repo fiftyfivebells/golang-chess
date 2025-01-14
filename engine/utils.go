@@ -1,23 +1,32 @@
 package engine
 
-func CoordToBoardIndex(coord string) byte {
-	file := coord[0] - 'a'
-	rank := int(coord[1]-'0') - 1
-
-	return byte(rank*8) + file
+var CharToPiece = map[byte]Piece{
+	'P': {Pawn, White},
+	'p': {Pawn, Black},
+	'N': {Knight, White},
+	'n': {Knight, Black},
+	'B': {Bishop, White},
+	'b': {Bishop, Black},
+	'R': {Rook, White},
+	'r': {Rook, Black},
+	'Q': {Queen, White},
+	'q': {Queen, Black},
+	'K': {King, White},
+	'k': {King, Black},
 }
 
-var CharToPiece = map[byte]Piece{
-	'P': Piece{Pawn, White},
-	'p': Piece{Pawn, Black},
-	'N': Piece{Knight, White},
-	'n': Piece{Knight, Black},
-	'B': Piece{Bishop, White},
-	'b': Piece{Bishop, Black},
-	'R': Piece{Rook, White},
-	'r': Piece{Rook, Black},
-	'Q': Piece{Queen, White},
-	'q': Piece{Queen, Black},
-	'K': Piece{King, White},
-	'k': Piece{King, Black},
+var PieceToChar = map[Piece]byte{
+	{Pawn, White}:   'P',
+	{Pawn, Black}:   'p',
+	{Knight, White}: 'N',
+	{Knight, Black}: 'n',
+	{Bishop, White}: 'B',
+	{Bishop, Black}: 'b',
+	{Rook, White}:   'R',
+	{Rook, Black}:   'r',
+	{Queen, White}:  'Q',
+	{Queen, Black}:  'q',
+	{King, White}:   'K',
+	{King, Black}:   'k',
+	{None, Blank}:   '.',
 }
