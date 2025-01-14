@@ -20,7 +20,7 @@ func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 		}
 	}
 
-	for i, square := 0, byte(56); i < len(fen); i++ {
+	for i, square := 0, Square(56); i < len(fen); i++ {
 		char := fen[i]
 		switch char {
 		case 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k':
@@ -63,6 +63,6 @@ func (b *BitboardBoard) SetPieceAtPosition(p engine.Piece, coord string) {
 	b.pieces[color][pieceType].setBitAtSquare(boardIndex)
 }
 
-func (b *BitboardBoard) GetPieceAtSquare(sq byte) engine.Piece {
+func (b *BitboardBoard) GetPieceAtSquare(sq Square) engine.Piece {
 	return b.squares[sq]
 }

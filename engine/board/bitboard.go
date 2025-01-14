@@ -6,11 +6,11 @@ type Bitboard uint64
 
 var SquareMasks [64]Bitboard
 
-func (bb *Bitboard) setBitAtSquare(square byte) {
+func (bb *Bitboard) setBitAtSquare(square Square) {
 	*bb |= SquareMasks[square]
 }
 
-func (bb *Bitboard) clearBitAtSquare(square byte) {
+func (bb *Bitboard) clearBitAtSquare(square Square) {
 	*bb &= ^SquareMasks[square]
 }
 
