@@ -1,5 +1,7 @@
 package engine
 
+import "strings"
+
 type Color byte
 
 const (
@@ -34,4 +36,32 @@ const (
 type Piece struct {
 	PieceType PieceType
 	Color     Color
+}
+
+type CastleAvailability byte
+
+const (
+	KingsideWhiteCastle  CastleAvailability = 0b0001
+	QueensideWhiteCastle CastleAvailability = 0b0010
+	KingsideBlackCastle  CastleAvailability = 0b0100
+	QueensideBlackCastle CastleAvailability = 0b1000
+)
+
+func (ca CastleAvailability) String() string {
+	var availability strings.Builder
+
+	if (ca & KingsideWhiteCastle) != 0 {
+		availability.WriteString("K")
+	}
+	if (ca & QueensideWhiteCastle) != 0 {
+		availability.WriteString("Q")
+	}
+	if (ca & KingsideBlackCastle) != 0 {
+		availability.WriteString("k")
+	}
+	if (ca & QueensideBlackCastle) != 0 {
+		availability.WriteString("q")
+	}
+
+	return availability.String()
 }
