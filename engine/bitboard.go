@@ -1,4 +1,4 @@
-package board
+package engine
 
 import "fmt"
 
@@ -10,14 +10,14 @@ func (bb *Bitboard) setBitAtSquare(square Square) {
 	*bb |= SquareMasks[square]
 }
 
-func (bb *Bitboard) clearBitAtSquare(square Square) {
-	*bb &= ^SquareMasks[square]
-}
+// func (bb *Bitboard) clearBitAtSquare(square Square) {
+// 	*bb &= ^SquareMasks[square]
+// }
 
 func (bb Bitboard) String() string {
 	bits := fmt.Sprintf("%064b\n", bb)
 	bbString := ""
-	for rank := 56; rank > -1; rank -= 8 {
+	for rank := A8; rank >= 0 && rank <= H8; rank -= 8 {
 		bbString += fmt.Sprintf("%v | ", (rank/8)+1)
 		for i := rank; i < rank+8; i++ {
 			square := bits[i]

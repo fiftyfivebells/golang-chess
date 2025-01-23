@@ -1,14 +1,13 @@
-package board
+package engine
 
 import (
-	"nsdb-go-edition/engine"
 	"testing"
 )
 
 func TestBoardFromFEN(t *testing.T) {
 	type BoardFromFenTestCase struct {
 		position string
-		expected engine.Piece
+		expected Piece
 	}
 
 	board := BitboardBoard{}
@@ -19,30 +18,30 @@ func TestBoardFromFEN(t *testing.T) {
 		testCases := []BoardFromFenTestCase{
 			{
 				"a1",
-				engine.Piece{
-					PieceType: engine.Rook,
-					Color:     engine.White,
+				Piece{
+					PieceType: Rook,
+					Color:     White,
 				},
 			},
 			{
 				"e1",
-				engine.Piece{
-					PieceType: engine.King,
-					Color:     engine.White,
+				Piece{
+					PieceType: King,
+					Color:     White,
 				},
 			},
 			{
 				"e8",
-				engine.Piece{
-					PieceType: engine.King,
-					Color:     engine.Black,
+				Piece{
+					PieceType: King,
+					Color:     Black,
 				},
 			},
 			{
 				"e4",
-				engine.Piece{
-					PieceType: engine.None,
-					Color:     engine.Blank,
+				Piece{
+					PieceType: None,
+					Color:     Blank,
 				},
 			},
 		}
@@ -57,7 +56,7 @@ func TestBoardFromFEN(t *testing.T) {
 
 			piece := testCase.expected
 			// I only want to check the bitboards if the piece is a real piece
-			if piece.PieceType != engine.None {
+			if piece.PieceType != None {
 				bit := board.pieces[piece.Color][piece.PieceType] & (1 << index)
 
 				if bit == 0 {
@@ -69,6 +68,7 @@ func TestBoardFromFEN(t *testing.T) {
 	})
 
 	t.Run("correctly sets board from non-starting fen string", func(t *testing.T) {
-
+		notStartingBoardFen := "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR"
+		board.SetBoardFromFEN(notStartingBoardFen)
 	})
 }
