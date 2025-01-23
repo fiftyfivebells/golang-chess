@@ -8,6 +8,17 @@ const (
 	Blank Color = 2
 )
 
+func (c Color) String() string {
+	switch c {
+	case White:
+		return "w"
+	case Black:
+		return "b"
+	default:
+		return ""
+	}
+}
+
 type PieceType byte
 
 const (
