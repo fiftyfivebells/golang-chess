@@ -1,5 +1,37 @@
 package engine
 
+func CoordToBoardIndex(coord string) Square {
+	if len(coord) != 2 {
+		return NoSquare
+	}
+
+	file := coord[0] - 'a'
+	rank := byte(coord[1]-'0') - 1
+
+	return Square(rank*8 + file)
+}
+
+func SquareToCoord(square Square) string {
+	file := square % 8
+	rank := square / 8
+
+	return string(rune('a'+file) + rune('0'+rank+1))
+}
+
+func CharToColor(ch string) Color {
+	var color Color
+	switch ch {
+	case "w":
+		color = White
+	case "b":
+		color = Black
+	default:
+		color = Blank
+	}
+
+	return color
+}
+
 var CharToPiece = map[byte]Piece{
 	'P': {Pawn, White},
 	'p': {Pawn, Black},
