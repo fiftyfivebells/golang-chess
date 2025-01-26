@@ -27,13 +27,12 @@ func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 		}
 	}
 
-	for i, square := 0, Square(56); i < len(fen); i++ {
+	for i, square := 0, A8; i < len(fen); i++ {
 		char := fen[i]
 		switch byte(char) {
 		case 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k':
 			piece := CharToPiece[char]
 			b.pieces[piece.Color][piece.PieceType].setBitAtSquare(square)
-
 			b.squares[square] = piece
 			square++
 		case '/':
@@ -47,7 +46,7 @@ func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 func (b BitboardBoard) GetFENRepresentation() string {
 	var fenString strings.Builder
 
-	for rank := 56; rank > -1; rank -= 8 {
+	for rank := A8; rank >= 0 && rank <= H8; rank -= 8 {
 		emptySquares := 0
 		for i := rank; i < rank+8; i++ {
 			piece := b.squares[i]
@@ -91,7 +90,7 @@ func (b *BitboardBoard) GetPieceAtSquare(sq Square) Piece {
 func (b BitboardBoard) String() string {
 	var stringRep string
 
-	for rank := 56; rank > -1; rank -= 8 {
+	for rank := A8; rank >= 0 && rank <= H8; rank -= 8 {
 		stringRep += fmt.Sprintf("%v | ", (rank/8)+1)
 		for i := rank; i < rank+8; i++ {
 			piece := PieceToChar[b.squares[i]]
