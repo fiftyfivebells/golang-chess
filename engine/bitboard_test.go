@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -11,9 +12,11 @@ func TestBoardFromFEN(t *testing.T) {
 	}
 
 	board := BitboardBoard{}
+	InitializeBitMasks()
 
 	t.Run("initializes board from starting fen string", func(t *testing.T) {
-		board.SetBoardFromFEN(InitialStateFenString)
+		boardFen := strings.Fields(InitialStateFenString)[0]
+		board.SetBoardFromFEN(boardFen)
 
 		testCases := []BoardFromFenTestCase{
 			{
@@ -55,9 +58,10 @@ func TestBoardFromFEN(t *testing.T) {
 			}
 
 			piece := testCase.expected
+
 			// I only want to check the bitboards if the piece is a real piece
 			if piece.PieceType != None {
-				bit := board.pieces[piece.Color][piece.PieceType] & (1 << index)
+				bit := board.pieces[piece.Color][piece.PieceType] & SquareMasks[index]
 
 				if bit == 0 {
 					t.Errorf("expected bit at index %d to be set, but it was not", index)
