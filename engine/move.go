@@ -9,19 +9,35 @@ package engine
 const (
 	SquareBits = 63
 	PieceBits  = 7
+	MoveBits   = 15
 
 	ToSquareOffset  = 6
 	PieceTypeOffset = 12
+	MoveTypeOffset  = 15
+)
+
+type MoveType byte
+
+const (
+	NoFlag MoveType = iota
+	Quiet
+	Attack
+	CastleKingside
+	CastleQueenside
+	EnPassant
+	Promotion
+	CapturePromotion
 )
 
 type Move uint32
 
-func NewMove(from, to Square, pieceType PieceType) Move {
+func NewMove(from, to Square, pieceType PieceType, moveType MoveType) Move {
 	newMove := uint32(0)
 
 	newMove |= uint32(from)
 	newMove |= (uint32(to) << ToSquareOffset)
 	newMove |= (uint32(pieceType) << PieceTypeOffset)
+	newMove |= (uint32(moveType) << MoveTypeOffset)
 
 	return Move(newMove)
 }
@@ -36,4 +52,8 @@ func (move Move) ToSquare() Square {
 
 func (move Move) PieceType() PieceType {
 	return PieceType((move >> PieceTypeOffset) & PieceBits)
+}
+
+func (move Move) MoveType() MoveType {
+	return MoveType((move >> MoveTypeOffset) & MoveBits)
 }
