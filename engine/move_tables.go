@@ -1,39 +1,60 @@
 package engine
 
 var KnightMoves = [64]Bitboard{}
+var KingMoves = [64]Bitboard{}
 
 const (
-	notAFile    = FileA ^ FullBitboard
-	notBFile    = FileB ^ FullBitboard
-	notAOrBFile = notAFile & notBFile
+	notFileA    = FileA ^ FullBitboard
+	notFileB    = FileB ^ FullBitboard
+	notFileAOrB = notFileA & notFileB
 
-	notGFile    = FileG ^ FullBitboard
-	notHFile    = FileH ^ FullBitboard
-	notHOrGFile = notHFile & notGFile
+	notFileG    = FileG ^ FullBitboard
+	notFileH    = FileH ^ FullBitboard
+	notFileHOrG = notFileH & notFileG
+
+	notRank8 = Rank8 ^ FullBitboard
+	notRank1 = Rank1 ^ FullBitboard
 )
 
 func InitializeMoveTables() {
 
 	for square := A1; square <= H8; square++ {
 		KnightMoves[square] = CreateKnightMovesForSquare(square)
+		KingMoves[square] = CreateKingMovesForSquare(square)
 	}
+}
+
+func CreateKingMovesForSquare(square Square) Bitboard {
+
+	startingSquare := SquareMasks[square]
+
+	north := startingSquare >> 8 & notRank1
+	northEast := startingSquare >> 9 & notRank1 & notFileA
+	east := startingSquare >> 1 & notFileA
+	southEast := startingSquare << 7 & notFileA
+	south := startingSquare << 8 & notRank8
+	southWest := startingSquare << 9 & notFileH
+	west := startingSquare << 1 & notFileH
+	northWest := startingSquare >> 7 & notRank1 & notFileH
+
+	return north | northEast | east | southEast | south | southWest | west | northWest
 }
 
 func CreateKnightMovesForSquare(square Square) Bitboard {
 
 	startingSquare := SquareMasks[square]
 
-	northNorthWest := startingSquare >> 15 & notHFile
-	northNorthEast := startingSquare >> 17 & notAFile
+	northNorthWest := startingSquare >> 15 & notFileH
+	northNorthEast := startingSquare >> 17 & notFileA
 
-	eastEastNorth := startingSquare >> 10 & notAOrBFile
-	eastEastSouth := startingSquare << 6 & notAOrBFile
+	eastEastNorth := startingSquare >> 10 & notFileAOrB
+	eastEastSouth := startingSquare << 6 & notFileAOrB
 
-	westWestNorth := startingSquare >> 6 & notHOrGFile
-	westWestSouth := startingSquare << 10 & notHOrGFile
+	westWestNorth := startingSquare >> 6 & notFileHOrG
+	westWestSouth := startingSquare << 10 & notFileHOrG
 
-	southSouthEast := startingSquare << 15 & notAFile
-	southSouthWest := startingSquare << 17 & notHFile
+	southSouthEast := startingSquare << 15 & notFileA
+	southSouthWest := startingSquare << 17 & notFileH
 
 	return northNorthWest | northNorthEast | eastEastNorth | westWestNorth | southSouthEast | eastEastSouth | westWestSouth | southSouthWest
 }
