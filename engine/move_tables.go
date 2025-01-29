@@ -11,9 +11,6 @@ const (
 	notFileG    = FileG ^ FullBitboard
 	notFileH    = FileH ^ FullBitboard
 	notFileHOrG = notFileH & notFileG
-
-	notRank8 = Rank8 ^ FullBitboard
-	notRank1 = Rank1 ^ FullBitboard
 )
 
 func InitializeMoveTables() {
@@ -28,14 +25,14 @@ func CreateKingMovesForSquare(square Square) Bitboard {
 
 	startingSquare := SquareMasks[square]
 
-	north := startingSquare >> 8 & notRank1
-	northEast := startingSquare >> 9 & notRank1 & notFileA
+	north := startingSquare >> 8
+	northEast := startingSquare >> 9 & notFileA
 	east := startingSquare >> 1 & notFileA
 	southEast := startingSquare << 7 & notFileA
-	south := startingSquare << 8 & notRank8
+	south := startingSquare << 8
 	southWest := startingSquare << 9 & notFileH
 	west := startingSquare << 1 & notFileH
-	northWest := startingSquare >> 7 & notRank1 & notFileH
+	northWest := startingSquare >> 7 & notFileH
 
 	return north | northEast | east | southEast | south | southWest | west | northWest
 }
