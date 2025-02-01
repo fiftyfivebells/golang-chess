@@ -4,13 +4,8 @@ var KnightMoves = [64]Bitboard{}
 var KingMoves = [64]Bitboard{}
 
 const (
-	notFileA    = FileA ^ FullBitboard
-	notFileB    = FileB ^ FullBitboard
-	notFileAOrB = notFileA & notFileB
-
-	notFileG    = FileG ^ FullBitboard
-	notFileH    = FileH ^ FullBitboard
-	notFileHOrG = notFileH & notFileG
+	notFileAOrB = ^(FileA | FileB)
+	notFileHOrG = ^(FileH | FileG)
 )
 
 func InitializeMoveTables() {
@@ -26,23 +21,22 @@ func CreateKingMovesForSquare(square Square) Bitboard {
 	startingSquare := SquareMasks[square]
 
 	north := startingSquare >> 8
-	northEast := startingSquare >> 9 & notFileA
-	east := startingSquare >> 1 & notFileA
-	southEast := startingSquare << 7 & notFileA
+	northEast := startingSquare >> 9 & ^FileA
+	east := startingSquare >> 1 & ^FileA
+	southEast := startingSquare << 7 & ^FileA
 	south := startingSquare << 8
-	southWest := startingSquare << 9 & notFileH
-	west := startingSquare << 1 & notFileH
-	northWest := startingSquare >> 7 & notFileH
+	southWest := startingSquare << 9 & ^FileH
+	west := startingSquare << 1 & ^FileH
+	northWest := startingSquare >> 7 & ^FileH
 
 	return north | northEast | east | southEast | south | southWest | west | northWest
 }
 
 func CreateKnightMovesForSquare(square Square) Bitboard {
-
 	startingSquare := SquareMasks[square]
 
-	northNorthWest := startingSquare >> 15 & notFileH
-	northNorthEast := startingSquare >> 17 & notFileA
+	northNorthWest := startingSquare >> 15 & ^FileH
+	northNorthEast := startingSquare >> 17 & ^FileA
 
 	eastEastNorth := startingSquare >> 10 & notFileAOrB
 	eastEastSouth := startingSquare << 6 & notFileAOrB
@@ -50,8 +44,8 @@ func CreateKnightMovesForSquare(square Square) Bitboard {
 	westWestNorth := startingSquare >> 6 & notFileHOrG
 	westWestSouth := startingSquare << 10 & notFileHOrG
 
-	southSouthEast := startingSquare << 15 & notFileA
-	southSouthWest := startingSquare << 17 & notFileH
+	southSouthEast := startingSquare << 15 & ^FileA
+	southSouthWest := startingSquare << 17 & ^FileH
 
 	return northNorthWest | northNorthEast | eastEastNorth | westWestNorth | southSouthEast | eastEastSouth | westWestSouth | southSouthWest
 }
