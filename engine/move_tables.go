@@ -20,14 +20,14 @@ func CreateKingMovesForSquare(square Square) Bitboard {
 
 	startingSquare := SquareMasks[square]
 
-	north := startingSquare >> 8
-	northEast := startingSquare >> 9 & ^FileA
+	north := startingSquare << 8
+	northEast := startingSquare << 7 & ^FileA
 	east := startingSquare >> 1 & ^FileA
-	southEast := startingSquare << 7 & ^FileA
-	south := startingSquare << 8
-	southWest := startingSquare << 9 & ^FileH
+	southEast := startingSquare >> 9 & ^FileA
+	south := startingSquare >> 8
+	southWest := startingSquare >> 7 & ^FileH
 	west := startingSquare << 1 & ^FileH
-	northWest := startingSquare >> 7 & ^FileH
+	northWest := startingSquare << 9 & ^FileH
 
 	return north | northEast | east | southEast | south | southWest | west | northWest
 }
@@ -35,17 +35,17 @@ func CreateKingMovesForSquare(square Square) Bitboard {
 func CreateKnightMovesForSquare(square Square) Bitboard {
 	startingSquare := SquareMasks[square]
 
-	northNorthWest := startingSquare >> 15 & ^FileH
-	northNorthEast := startingSquare >> 17 & ^FileA
+	northNorthWest := startingSquare << 17 & ^FileH
+	northNorthEast := startingSquare << 15 & ^FileA
 
-	eastEastNorth := startingSquare >> 10 & notFileAOrB
-	eastEastSouth := startingSquare << 6 & notFileAOrB
+	eastEastNorth := startingSquare << 6 & notFileAOrB
+	eastEastSouth := startingSquare >> 10 & notFileAOrB
 
-	westWestNorth := startingSquare >> 6 & notFileHOrG
-	westWestSouth := startingSquare << 10 & notFileHOrG
+	westWestNorth := startingSquare << 10 & notFileHOrG
+	westWestSouth := startingSquare >> 6 & notFileHOrG
 
-	southSouthEast := startingSquare << 15 & ^FileA
-	southSouthWest := startingSquare << 17 & ^FileH
+	southSouthEast := startingSquare >> 17 & ^FileA
+	southSouthWest := startingSquare >> 15 & ^FileH
 
 	return northNorthWest | northNorthEast | eastEastNorth | westWestNorth | southSouthEast | eastEastSouth | westWestSouth | southSouthWest
 }

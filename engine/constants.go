@@ -5,13 +5,13 @@ type Square byte
 const (
 	InitialStateFenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-	A1, A2, A3, A4, A5, A6, A7, A8 Square = 0, 8, 16, 24, 32, 40, 48, 56
-	B1, B2, B3, B4, B5, B6, B7, B8 Square = 1, 9, 17, 25, 33, 41, 49, 57
-	C1, C2, C3, C4, C5, C6, C7, C8 Square = 2, 10, 18, 26, 34, 42, 50, 58
-	D1, D2, D3, D4, D5, D6, D7, D8 Square = 3, 11, 19, 27, 35, 43, 51, 59
-	E1, E2, E3, E4, E5, E6, E7, E8 Square = 4, 12, 20, 28, 36, 44, 52, 60
-	F1, F2, F3, F4, F5, F6, F7, F8 Square = 5, 13, 21, 29, 37, 45, 53, 61
-	G1, G2, G3, G4, G5, G6, G7, G8 Square = 6, 14, 22, 30, 38, 46, 54, 62
-	H1, H2, H3, H4, H5, H6, H7, H8 Square = 7, 15, 23, 31, 39, 47, 55, 63
+	A1, B1, C1, D1, E1, F1, G1, H1 Square = 7, 6, 5, 4, 3, 2, 1, 0
+	A2, B2, C2, D2, E2, F2, G2, H2 Square = 15, 14, 13, 12, 11, 10, 9, 8
+	A3, B3, C3, D3, E3, F3, G3, H3 Square = 23, 22, 21, 20, 19, 18, 17, 16
+	A4, B4, C4, D4, E4, F4, G4, H4 Square = 31, 30, 29, 28, 27, 26, 25, 24
+	A5, B5, C5, D5, E5, F5, G5, H5 Square = 39, 38, 37, 36, 35, 34, 33, 32
+	A6, B6, C6, D6, E6, F6, G6, H6 Square = 47, 46, 45, 44, 43, 42, 41, 40
+	A7, B7, C7, D7, E7, F7, G7, H7 Square = 55, 54, 53, 52, 51, 50, 49, 48
+	A8, B8, C8, D8, E8, F8, G8, H8 Square = 63, 62, 61, 60, 59, 58, 57, 56
 	NoSquare                       Square = 64
 )
