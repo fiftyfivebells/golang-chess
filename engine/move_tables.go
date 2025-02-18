@@ -2,6 +2,9 @@ package engine
 
 var Rays = [8][64]Bitboard{}
 
+var PawnPushes = [2][64]Bitboard{}
+var PawnAttacks = [2][64]Bitboard{}
+
 var KnightMoves = [64]Bitboard{}
 var KingMoves = [64]Bitboard{}
 var BishopMoves = [64]Bitboard{}
@@ -9,14 +12,14 @@ var RookMoves = [64]Bitboard{}
 var QueenMoves = [64]Bitboard{}
 
 const (
-	North int = iota
-	NorthEast
-	East
-	SouthEast
-	South
-	SouthWest
-	West
-	NorthWest
+	North     = 8
+	NorthEast = 7
+	East      = 1
+	SouthEast = 9
+	South     = 8
+	SouthWest = 7
+	West      = 1
+	NorthWest = 9
 
 	notFileAOrB = ^(FileA | FileB)
 	notFileHOrG = ^(FileH | FileG)
@@ -25,6 +28,12 @@ const (
 func InitializeMoveTables() {
 
 	for square := H1; square <= A8; square++ {
+		board := SquareMasks[square]
+		PawnPushes[White][square] = board << North
+		PawnPushes[Black][square] = board >> South
+		PawnAttacks[White][square] = createWhitePawnAttacksForSquare(square)
+		PawnAttacks[Black][square] = createBlackPawnAttacksForSquare(square)
+
 		KnightMoves[square] = createKnightMovesForSquare(square)
 		KingMoves[square] = createKingMovesForSquare(square)
 		BishopMoves[square] = createBishopMovesForSquare(square)
@@ -37,14 +46,14 @@ func createKingMovesForSquare(square Square) Bitboard {
 
 	startingSquare := SquareMasks[square]
 
-	north := startingSquare << 8
-	northEast := startingSquare << 7 & ^FileA
-	east := startingSquare >> 1 & ^FileA
-	southEast := startingSquare >> 9 & ^FileA
-	south := startingSquare >> 8
-	southWest := startingSquare >> 7 & ^FileH
-	west := startingSquare << 1 & ^FileH
-	northWest := startingSquare << 9 & ^FileH
+	north := startingSquare << North
+	northEast := startingSquare << NorthEast & ^FileA
+	east := startingSquare >> East & ^FileA
+	southEast := startingSquare >> SouthEast & ^FileA
+	south := startingSquare >> South
+	southWest := startingSquare >> SouthWest & ^FileH
+	west := startingSquare << West & ^FileH
+	northWest := startingSquare << NorthWest & ^FileH
 
 	return north | northEast | east | southEast | south | southWest | west | northWest
 }
