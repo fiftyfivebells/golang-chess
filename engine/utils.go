@@ -18,6 +18,13 @@ func SquareToCoord(square Square) string {
 	return string(rune('a'+file) + rune('0'+rank+1))
 }
 
+func SquareToFileRank(square Square) (int, int) {
+	file := int(square % 8)
+	rank := int(square / 8)
+
+	return file, rank
+}
+
 func CharToColor(ch string) Color {
 	var color Color
 	switch ch {
