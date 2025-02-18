@@ -88,18 +88,6 @@ func (gs GameState) String() string {
 	gameStateString += "\n"
 
 	gameStateString += "castle availability: "
-	// if (gs.CastleRights & KingsideWhiteCastle) != 0 {
-	// 	gameStateString += "K"
-	// }
-	// if (gs.CastleRights & QueensideWhiteCastle) != 0 {
-	// 	gameStateString += "Q"
-	// }
-	// if (gs.CastleRights & KingsideBlackCastle) != 0 {
-	// 	gameStateString += "k"
-	// }
-	// if (gs.CastleRights & QueensideBlackCastle) != 0 {
-	// 	gameStateString += "q"
-	// }
 	gameStateString += gs.CastleRights.String()
 	gameStateString += "\n"
 
