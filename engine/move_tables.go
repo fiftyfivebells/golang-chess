@@ -42,6 +42,20 @@ func InitializeMoveTables() {
 	}
 }
 
+func createWhitePawnAttacksForSquare(square Square) Bitboard {
+	board := SquareMasks[square]
+	rightAttack := (board << NorthEast) & ^FileA
+	leftAttack := (board << NorthWest) & ^FileH
+	return rightAttack | leftAttack
+}
+
+func createBlackPawnAttacksForSquare(square Square) Bitboard {
+	board := SquareMasks[square]
+	rightAttack := (board >> SouthEast) & ^FileA
+	leftAttack := (board >> SouthWest) & ^FileH
+	return rightAttack | leftAttack
+}
+
 func createKingMovesForSquare(square Square) Bitboard {
 
 	startingSquare := SquareMasks[square]
