@@ -83,11 +83,23 @@ func (b *BitboardBoard) SetPieceAtPosition(p Piece, coord string) {
 	b.pieces[color][pieceType].setBitAtSquare(boardIndex)
 }
 
-func (b *BitboardBoard) GetPieceAtSquare(sq Square) Piece {
+func (b BitboardBoard) GetPieceAtSquare(sq Square) Piece {
 	return b.squares[sq]
 }
 
-func (b BitboardBoard) GetAllPiecesByColor(color Color) Bitboard {
+func (b BitboardBoard) getAllPieces() Bitboard {
+	bb := Bitboard(0)
+
+	for color := White; color < Blank; color++ {
+		for pieceType := Pawn; pieceType < None; pieceType++ {
+			bb |= b.pieces[color][pieceType]
+		}
+	}
+
+	return bb
+}
+
+func (b BitboardBoard) getAllPiecesByColor(color Color) Bitboard {
 	bb := Bitboard(0)
 
 	for pieceType := Pawn; pieceType < None; pieceType++ {
@@ -95,6 +107,10 @@ func (b BitboardBoard) GetAllPiecesByColor(color Color) Bitboard {
 	}
 
 	return bb
+}
+
+func (b BitboardBoard) getPiecesByColorAndType(color Color, pieceType PieceType) Bitboard {
+	return b.pieces[color][pieceType]
 }
 
 func (b BitboardBoard) String() string {
