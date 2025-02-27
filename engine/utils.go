@@ -5,7 +5,7 @@ func CoordToBoardIndex(coord string) Square {
 		return NoSquare
 	}
 
-	file := coord[0] - 'a'
+	file := 7 - (coord[0] - 'a')
 	rank := byte(coord[1]-'0') - 1
 
 	return Square(rank*8 + file)
