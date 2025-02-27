@@ -21,7 +21,7 @@ type MoveType byte
 const (
 	NoFlag MoveType = iota
 	Quiet
-	Attack
+	Capture
 	CastleKingside
 	CastleQueenside
 	EnPassant
