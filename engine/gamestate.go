@@ -13,6 +13,20 @@ type GameState struct {
 	EPSquare     Square
 	HalfMove     uint16
 	FullMove     byte
+
+	moveGen MoveGenerator
+}
+
+func InitializeGameState(board Board, moveGen MoveGenerator) GameState {
+	return GameState{
+		Board:   board,
+		moveGen: moveGen,
+	}
+}
+
+func (gs *GameState) GetMovesForPosition() []Move {
+	gs.moveGen.GenerateMoves()
+	return gs.moveGen.GetMoves()
 }
 
 func (gs GameState) GetGameStateFENString() string {
@@ -56,7 +70,9 @@ func (gs *GameState) SetStateFromFENString(fenString string) {
 	halfMove, _ := strconv.Atoi(fenValues[4])
 	fullMove, _ := strconv.Atoi(fenValues[5])
 
-	gs.Board = NewBitboardBoard(pieces)
+	if gs.Board == nil {
+		gs.Board = NewBitboardBoard(pieces)
+	}
 	gs.ActiveSide = CharToColor(activeSide)
 	gs.HalfMove = uint16(halfMove)
 	gs.FullMove = byte(fullMove)
