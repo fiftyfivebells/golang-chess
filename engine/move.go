@@ -1,5 +1,7 @@
 package engine
 
+import "fmt"
+
 // A move is a 32-bit unsigned integer, where groups of bits represent
 // different parts of the move:
 // - bits 0 - 5: from square
@@ -56,4 +58,11 @@ func (move Move) PieceType() PieceType {
 
 func (move Move) MoveType() MoveType {
 	return MoveType((move >> MoveTypeOffset) & MoveBits)
+}
+
+func (move Move) String() string {
+	from := SquareToCoord(move.FromSquare())
+	to := SquareToCoord(move.ToSquare())
+
+	return fmt.Sprintf("%s%s", from, to)
 }
