@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"math/bits"
+)
 
 type Bitboard uint64
 
@@ -39,6 +42,18 @@ func (bb *Bitboard) clearBitAtSquare(square Square) {
 	*bb &= ^SquareMasks[square]
 }
 
+func (bb Bitboard) lsb() Square {
+	bit := bits.TrailingZeros64(uint64(bb))
+	return Square(bit)
+}
+
+func (bb *Bitboard) PopLSB() Square {
+	square := bb.lsb()
+	bb.clearBitAtSquare(square)
+
+	return square
+}
+
 func (bb Bitboard) String() string {
 	bits := fmt.Sprintf("%064b\n", bb)
 	bbString := ""
@@ -61,7 +76,7 @@ func (bb Bitboard) String() string {
 }
 
 func InitializeBitMasks() {
-	for i := 0; i < len(SquareMasks); i++ {
+	for i := H1; i <= A8; i++ {
 		SquareMasks[i] = Bitboard(1) << i
 	}
 
