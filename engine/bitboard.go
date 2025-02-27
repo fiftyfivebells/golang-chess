@@ -32,7 +32,7 @@ const (
 	AntiDiagonal  = Bitboard(0x8040201008040201)
 )
 
-var SquareMasks [64]Bitboard
+var SquareMasks [65]Bitboard
 
 func (bb *Bitboard) setBitAtSquare(square Square) {
 	*bb |= SquareMasks[square]
@@ -79,5 +79,5 @@ func InitializeBitMasks() {
 	for i := H1; i <= A8; i++ {
 		SquareMasks[i] = Bitboard(1) << i
 	}
-
+	SquareMasks[NoSquare] = 0
 }
