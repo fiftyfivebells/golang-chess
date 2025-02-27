@@ -10,6 +10,14 @@ const (
 	Blank Color = 2
 )
 
+func (c Color) EnemyColor() Color {
+	if c != Blank {
+		return c ^ 1
+	}
+
+	return Blank
+}
+
 func (c Color) String() string {
 	switch c {
 	case White:
