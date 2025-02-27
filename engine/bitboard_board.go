@@ -87,6 +87,16 @@ func (b *BitboardBoard) GetPieceAtSquare(sq Square) Piece {
 	return b.squares[sq]
 }
 
+func (b BitboardBoard) GetAllPiecesByColor(color Color) Bitboard {
+	bb := Bitboard(0)
+
+	for pieceType := Pawn; pieceType < None; pieceType++ {
+		bb |= b.pieces[color][pieceType]
+	}
+
+	return bb
+}
+
 func (b BitboardBoard) String() string {
 	var stringRep string
 
