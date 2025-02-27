@@ -27,8 +27,14 @@ const (
 	CastleKingside
 	CastleQueenside
 	EnPassant
-	Promotion
-	CapturePromotion
+	PromotionKnight
+	PromotionBishop
+	PromotionRook
+	PromotionQueen
+	CapturePromotionKnight
+	CapturePromotionBishop
+	CapturePromotionRook
+	CapturePromotionQueen
 )
 
 type Move uint32
