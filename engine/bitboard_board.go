@@ -27,18 +27,16 @@ func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 		}
 	}
 
-	for i, square := 0, H8; i < len(fen); i++ {
+	for i, square := 0, A8; i < len(fen); i++ {
 		char := fen[i]
 		switch byte(char) {
 		case 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k':
 			piece := CharToPiece[char]
 			b.pieces[piece.Color][piece.PieceType].setBitAtSquare(square)
 			b.squares[square] = piece
-			square++
-		case '/':
-			square -= 16
+			square--
 		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			square += Square(fen[i] - '0')
+			square -= Square(char - '0')
 		}
 	}
 }
@@ -87,6 +85,16 @@ func (b BitboardBoard) GetPieceAtSquare(sq Square) Piece {
 	return b.squares[sq]
 }
 
+func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
+	enemy := activeSide.EnemyColor()
+
+	pawnAttacks := (PawnPushes[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
+	knightAttacks := (KnightMoves[sq] & b.getPiecesByColorAndType(enemy, Knight)) != 0
+	kingAttacks := (KingMoves[sq] & b.getPiecesByColorAndType(enemy, King)) != 0
+
+	return pawnAttacks || knightAttacks || kingAttacks
+}
+
 func (b BitboardBoard) getAllPieces() Bitboard {
 	bb := Bitboard(0)
 
@@ -116,9 +124,10 @@ func (b BitboardBoard) getPiecesByColorAndType(color Color, pieceType PieceType)
 func (b BitboardBoard) String() string {
 	var stringRep string
 
-	for rank := H8; rank <= A8 && rank >= H1; rank -= 8 {
-		stringRep += fmt.Sprintf("%v | ", rank/8+1)
-		for i := rank; i < rank+8; i++ {
+	for rank := 8; rank > 0; rank-- {
+		square := rank*8 - 1
+		stringRep += fmt.Sprintf("%v | ", square/8+1)
+		for i := square; i > square-8; i-- {
 			piece := PieceToChar[b.squares[i]]
 			stringRep += fmt.Sprintf("%s ", string(piece))
 		}
