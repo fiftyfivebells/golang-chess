@@ -14,19 +14,26 @@ type GameState struct {
 	HalfMove     uint16
 	FullMove     byte
 
+	PreviousStates []GameState
+
 	moveGen MoveGenerator
 }
 
 func InitializeGameState(board Board, moveGen MoveGenerator) GameState {
 	return GameState{
-		Board:   board,
-		moveGen: moveGen,
+		FullMove: 1,
+		Board:    board,
+		moveGen:  moveGen,
 	}
 }
 
 func (gs *GameState) GetMovesForPosition() []Move {
-	gs.moveGen.GenerateMoves()
+	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
 	return gs.moveGen.GetMoves()
+}
+
+func (gs *GameState) ApplyMove(move Move) {
+
 }
 
 func (gs GameState) GetGameStateFENString() string {
@@ -70,9 +77,12 @@ func (gs *GameState) SetStateFromFENString(fenString string) {
 	halfMove, _ := strconv.Atoi(fenValues[4])
 	fullMove, _ := strconv.Atoi(fenValues[5])
 
-	if gs.Board == nil {
+	if gs.Board != nil {
+		gs.Board.SetBoardFromFEN(pieces)
+	} else {
 		gs.Board = NewBitboardBoard(pieces)
 	}
+
 	gs.ActiveSide = CharToColor(activeSide)
 	gs.HalfMove = uint16(halfMove)
 	gs.FullMove = byte(fullMove)
