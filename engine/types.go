@@ -46,6 +46,42 @@ type Piece struct {
 	Color     Color
 }
 
+func (p Piece) String() string {
+	if p.Color == White {
+		switch p.PieceType {
+		case Pawn:
+			return "P"
+		case Knight:
+			return "N"
+		case Bishop:
+			return "B"
+		case Rook:
+			return "R"
+		case Queen:
+			return "Q"
+		case King:
+			return "K"
+		}
+	} else if p.Color == Black {
+		switch p.PieceType {
+		case Pawn:
+			return "p"
+		case Knight:
+			return "n"
+		case Bishop:
+			return "b"
+		case Rook:
+			return "r"
+		case Queen:
+			return "q"
+		case King:
+			return "k"
+		}
+	}
+
+	return "none"
+}
+
 type CastleAvailability byte
 
 const (
