@@ -30,9 +30,70 @@ const (
 	FullBitboard  = Bitboard(0xffffffffffffffff)
 	Diagonal      = Bitboard(0x0102040810204080)
 	AntiDiagonal  = Bitboard(0x8040201008040201)
+
+	F1G1Mask   = Bitboard(6)
+	B1C1D1Mask = Bitboard(0x70)
+	F8G8Mask   = Bitboard(0x600000000000000)
+	B8C8D8Mask = Bitboard(0x7000000000000000)
 )
 
 var SquareMasks [65]Bitboard
+
+func ReverseBitboard(bb Bitboard) Bitboard {
+	asInt := uint64(bb)
+
+	return Bitboard(bits.Reverse64(asInt))
+}
+
+func RankMaskForSquare(square Square) Bitboard {
+	rank := square / 8
+
+	switch rank {
+	case 0:
+		return Rank1
+	case 1:
+		return Rank2
+	case 2:
+		return Rank3
+	case 3:
+		return Rank4
+	case 4:
+		return Rank5
+	case 5:
+		return Rank6
+	case 6:
+		return Rank7
+	case 7:
+		return Rank8
+	default:
+		return 0
+	}
+}
+
+func FileMaskForSquare(square Square) Bitboard {
+	file := int(square % 8)
+
+	switch file {
+	case 7:
+		return FileA
+	case 6:
+		return FileB
+	case 5:
+		return FileC
+	case 4:
+		return FileD
+	case 3:
+		return FileE
+	case 2:
+		return FileF
+	case 1:
+		return FileG
+	case 0:
+		return FileH
+	default:
+		return 0
+	}
+}
 
 func (bb *Bitboard) setBitAtSquare(square Square) {
 	*bb |= SquareMasks[square]
