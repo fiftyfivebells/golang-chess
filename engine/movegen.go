@@ -6,6 +6,6 @@ type ScoredMove struct {
 }
 
 type MoveGenerator interface {
-	GenerateMoves(activeSide Color, enPassant Square)
+	GenerateMoves(activeSide Color, enPassant Square, castleAvailability CastleAvailability)
 	GetMoves() []Move
 }

@@ -1,7 +1,5 @@
 package engine
 
-var Rays = [8][64]Bitboard{}
-
 var PawnPushes = [2][64]Bitboard{}
 var PawnAttacks = [2][64]Bitboard{}
 
@@ -10,6 +8,11 @@ var KingMoves = [64]Bitboard{}
 var BishopMoves = [64]Bitboard{}
 var RookMoves = [64]Bitboard{}
 var QueenMoves = [64]Bitboard{}
+
+var DiagonalMasks = [64]Bitboard{}
+var AntiDiagonalMasks = [64]Bitboard{}
+var HorizontalMasks = [64]Bitboard{}
+var VerticalMasks = [64]Bitboard{}
 
 const (
 	North     = 8
@@ -36,9 +39,11 @@ func InitializeMoveTables() {
 
 		KnightMoves[square] = createKnightMovesForSquare(square)
 		KingMoves[square] = createKingMovesForSquare(square)
-		BishopMoves[square] = createBishopMovesForSquare(square)
-		RookMoves[square] = createRookMovesForSquare(square)
-		QueenMoves[square] = BishopMoves[square] | RookMoves[square]
+
+		HorizontalMasks[square] = createHorizontalMasks(square)
+		VerticalMasks[square] = createVerticalMasks(square)
+		DiagonalMasks[square] = createDiagonalMask(square)
+		AntiDiagonalMasks[square] = createAntiDiagonalMask(square)
 	}
 }
 
@@ -98,7 +103,7 @@ func createDiagonalMask(square Square) Bitboard {
 	north := -diagonal & (diagonal >> 31)
 	south := diagonal & (-diagonal >> 31)
 
-	return Diagonal >> south << north
+	return (Diagonal >> south << north) ^ SquareMasks[square]
 }
 
 // createAntiDiagonalMask takes in a square and returns the bitboard that masks the antidiagonal lines
@@ -108,20 +113,13 @@ func createAntiDiagonalMask(square Square) Bitboard {
 	north := -antiDiagonal & (antiDiagonal >> 31)
 	south := antiDiagonal & (-antiDiagonal >> 31)
 
-	return AntiDiagonal >> south << north
+	return (AntiDiagonal >> south << north) ^ SquareMasks[square]
 }
 
-func createBishopMovesForSquare(square Square) Bitboard {
-	diagonal := createDiagonalMask(square)
-	antiDiagonal := createAntiDiagonalMask(square)
-
-	return (diagonal | antiDiagonal) ^ SquareMasks[square]
+func createHorizontalMasks(square Square) Bitboard {
+	return (Bitboard(0xff) << (square & 56)) ^ SquareMasks[square]
 }
 
-func createRookMovesForSquare(square Square) Bitboard {
-	// the calculations here are taken from the same link as above
-	rank := Bitboard(0xff) << (square & 56)
-	file := Bitboard(0x0101010101010101) << (square & 7)
-
-	return (rank | file) ^ SquareMasks[square]
+func createVerticalMasks(square Square) Bitboard {
+	return (Bitboard(0x0101010101010101) << (square & 7)) ^ SquareMasks[square]
 }
