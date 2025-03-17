@@ -39,6 +39,21 @@ func CharToColor(ch string) Color {
 	return color
 }
 
+func CastlingRookPositions(kingFrom, kingTo Square) (rookFrom, rookTo Square) {
+	switch kingTo {
+	case G1:
+		rookFrom, rookTo = H1, F1
+	case C1:
+		rookFrom, rookTo = A1, D1
+	case G8:
+		rookFrom, rookTo = H8, F8
+	case C8:
+		rookFrom, rookTo = A8, D8
+	}
+
+	return rookFrom, rookTo
+}
+
 var CharToPiece = map[byte]Piece{
 	'P': {Pawn, White},
 	'p': {Pawn, Black},
