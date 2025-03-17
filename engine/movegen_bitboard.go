@@ -116,15 +116,15 @@ func isPromotion(to Square, color Color) bool {
 func (bmg *BitboardMoveGenerator) addPromotionMoves(from, to Square, isCapture bool) {
 
 	if isCapture {
-		bmg.addMove(NewMove(from, to, Pawn, CapturePromotionKnight))
-		bmg.addMove(NewMove(from, to, Pawn, CapturePromotionBishop))
-		bmg.addMove(NewMove(from, to, Pawn, CapturePromotionRook))
-		bmg.addMove(NewMove(from, to, Pawn, CapturePromotionQueen))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Knight, CapturePromotion))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Bishop, CapturePromotion))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Rook, CapturePromotion))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Queen, CapturePromotion))
 	} else {
-		bmg.addMove(NewMove(from, to, Pawn, PromotionKnight))
-		bmg.addMove(NewMove(from, to, Pawn, PromotionBishop))
-		bmg.addMove(NewMove(from, to, Pawn, PromotionRook))
-		bmg.addMove(NewMove(from, to, Pawn, PromotionQueen))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Knight, Promotion))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Bishop, Promotion))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Rook, Promotion))
+		bmg.addMove(NewPromotionMove(from, to, Pawn, Queen, Promotion))
 	}
 }
 
