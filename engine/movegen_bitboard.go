@@ -48,6 +48,8 @@ func (bmg *BitboardMoveGenerator) generateMovesByPiece(pieceType PieceType, from
 		moves = bmg.generateRookMoves(from, activeSide)
 	case Bishop:
 		moves = bmg.generateBishopMoves(from, activeSide)
+	case Queen:
+		moves = bmg.generateQueenMoves(from, activeSide)
 	case King:
 		moves = (KingMoves[from] & ^activePieces)
 	}
@@ -207,6 +209,10 @@ func (bmg BitboardMoveGenerator) generateSlidingMoves(activeSide Color, square S
 	allies := bmg.board.GetAllPiecesByColor(activeSide)
 
 	return (bottom ^ top) & mask & ^allies
+}
+
+func (bmg BitboardMoveGenerator) generateQueenMoves(from Square, activeSide Color) Bitboard {
+	return bmg.generateBishopMoves(from, activeSide) | bmg.generateRookMoves(from, activeSide)
 }
 
 func (bmg *BitboardMoveGenerator) createMovesFromBitboard(from Square, moves, targets Bitboard, pieceType PieceType) {
