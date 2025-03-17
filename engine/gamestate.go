@@ -14,9 +14,17 @@ type GameState struct {
 	HalfMove     uint16
 	FullMove     byte
 
-	PreviousStates []GameState
+	PreviousStates []IrreversibleState
 
 	moveGen MoveGenerator
+}
+
+type IrreversibleState struct {
+	CastleRights CastleAvailability
+	EPSquare     Square
+	HalfMove     uint16
+	Moved        Piece
+	Destination  Piece
 }
 
 func InitializeGameState(board Board, moveGen MoveGenerator) GameState {
@@ -33,7 +41,77 @@ func (gs *GameState) GetMovesForPosition() []Move {
 }
 
 func (gs *GameState) ApplyMove(move Move) {
+	previous := IrreversibleState{
+		CastleRights: gs.CastleRights,
+		EPSquare:     gs.EPSquare,
+		HalfMove:     gs.HalfMove,
+		Moved:        gs.Board.GetPieceAtSquare(move.FromSquare()),
+		Destination:  gs.Board.GetPieceAtSquare(move.ToSquare()),
+	}
 
+	gs.FullMove++
+	gs.HalfMove++
+
+	gs.EPSquare = NoSquare
+
+	movingPiece := Piece{
+		Color:     gs.ActiveSide,
+		PieceType: move.PieceType(),
+	}
+
+	moveType := move.MoveType()
+	from := move.FromSquare()
+	to := move.ToSquare()
+
+	if !IsAttackMove(moveType) {
+		switch moveType {
+		case Quiet:
+			gs.Board.MovePiece(movingPiece, from, to)
+
+		case CastleKingside:
+
+		case CastleQueenside:
+			// castle move
+
+		case Promotion:
+			promotionPiece := Piece{
+				Color:     gs.ActiveSide,
+				PieceType: move.PromotionPieceType(),
+			}
+			gs.Board.MovePiece(promotionPiece, from, to)
+		}
+	} else {
+		switch moveType {
+		case Capture:
+			gs.Board.MovePiece(movingPiece, from, to)
+
+		case EnPassant:
+			pawnDirection := North
+			if gs.ActiveSide == Black {
+				pawnDirection = South
+			}
+
+			capturedPawn := Square(int(to) - pawnDirection)
+			previous.Destination = gs.Board.GetPieceAtSquare(capturedPawn)
+
+			gs.Board.MovePiece(movingPiece, from, to)
+
+		case CapturePromotion:
+			// promotion capture move:
+			// remove the captured piece from the board
+			// remove the pawn from the board
+			// add the new piece type where the captured piece was
+			promotionPiece := Piece{
+				Color:     gs.ActiveSide,
+				PieceType: move.PromotionPieceType(),
+			}
+			gs.Board.MovePiece(promotionPiece, from, to)
+		}
+
+		gs.FullMove = 0
+	}
+
+	gs.PreviousStates = append(gs.PreviousStates, previous)
 }
 
 func (gs GameState) GetGameStateFENString() string {
