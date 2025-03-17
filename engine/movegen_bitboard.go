@@ -21,6 +21,7 @@ func (bmg BitboardMoveGenerator) GetMoves() []Move {
 }
 
 func (bmg *BitboardMoveGenerator) GenerateMoves(activeSide Color, enPassant Square, castleAvailability CastleAvailability) {
+	bmg.moves = bmg.moves[:0]
 	targets := bmg.board.GetAllPiecesByColor(activeSide.EnemyColor())
 
 	for pieceType := Knight; pieceType < None; pieceType++ {
