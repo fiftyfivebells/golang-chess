@@ -49,9 +49,7 @@ func (gs *GameState) ApplyMove(move Move) {
 		Destination:  gs.Board.GetPieceAtSquare(move.ToSquare()),
 	}
 
-	gs.FullMove++
 	gs.HalfMove++
-
 	gs.EPSquare = NoSquare
 
 	movingPiece := Piece{
@@ -63,55 +61,49 @@ func (gs *GameState) ApplyMove(move Move) {
 	from := move.FromSquare()
 	to := move.ToSquare()
 
-	if !IsAttackMove(moveType) {
-		switch moveType {
-		case Quiet:
-			gs.Board.MovePiece(movingPiece, from, to)
-
-		case CastleKingside:
-
-		case CastleQueenside:
-			// castle move
-
-		case Promotion:
-			promotionPiece := Piece{
-				Color:     gs.ActiveSide,
-				PieceType: move.PromotionPieceType(),
-			}
-			gs.Board.MovePiece(promotionPiece, from, to)
+	switch moveType {
+	case Quiet, Capture:
+		gs.Board.MovePiece(movingPiece, from, to)
+	case Promotion, CapturePromotion:
+		promotionPiece := Piece{
+			Color:     gs.ActiveSide,
+			PieceType: move.PromotionPieceType(),
 		}
-	} else {
-		switch moveType {
-		case Capture:
-			gs.Board.MovePiece(movingPiece, from, to)
+		gs.Board.MovePiece(promotionPiece, from, to)
+	case CastleKingside, CastleQueenside:
+		gs.Board.CastleMove(from, to)
+	case EnPassant:
+		pawnDirection := gs.getPawnDirection()
 
-		case EnPassant:
-			pawnDirection := North
-			if gs.ActiveSide == Black {
-				pawnDirection = South
-			}
+		capturedPawn := Square(int(to) - pawnDirection)
+		previous.Destination = gs.Board.GetPieceAtSquare(capturedPawn)
 
-			capturedPawn := Square(int(to) - pawnDirection)
-			previous.Destination = gs.Board.GetPieceAtSquare(capturedPawn)
+		gs.Board.MovePiece(movingPiece, from, to)
+		gs.Board.RemovePieceFromSquare(capturedPawn)
+	}
 
-			gs.Board.MovePiece(movingPiece, from, to)
+	// The halfmove clock gets reset if the move was a capture or if the moved piece was a pawn
+	if IsAttackMove(moveType) && previous.Moved.PieceType == Pawn {
+		gs.HalfMove = 0
+	}
 
-		case CapturePromotion:
-			// promotion capture move:
-			// remove the captured piece from the board
-			// remove the pawn from the board
-			// add the new piece type where the captured piece was
-			promotionPiece := Piece{
-				Color:     gs.ActiveSide,
-				PieceType: move.PromotionPieceType(),
-			}
-			gs.Board.MovePiece(promotionPiece, from, to)
+	if previous.Moved.PieceType == Pawn && isDoublePawnPush(from, to) {
+		pawnDirection := gs.getPawnDirection()
+		epSquare := Square(int(from) - pawnDirection)
+
+		if gs.Board.SquareIsUnderAttackByPawn(epSquare, gs.ActiveSide) {
+			gs.EPSquare = epSquare
 		}
-
-		gs.FullMove = 0
 	}
 
 	gs.PreviousStates = append(gs.PreviousStates, previous)
+
+	// The fullmove number is incremented only after the black side has moved
+	if gs.ActiveSide == Black {
+		gs.FullMove++
+	}
+
+	gs.ActiveSide = gs.ActiveSide.EnemyColor()
 }
 
 func (gs GameState) GetGameStateFENString() string {
@@ -206,4 +198,27 @@ func (gs GameState) String() string {
 	gameStateString += fmt.Sprintf("half move clock: %d\n", gs.HalfMove)
 	gameStateString += fmt.Sprintf("full move clock: %d\n\n", gs.FullMove)
 	return gameStateString
+}
+
+func (gs GameState) getPawnDirection() int {
+	pawnDirection := North
+	if gs.ActiveSide == Black {
+		pawnDirection = South
+	}
+
+	return pawnDirection
+}
+
+// isDoublePawnPush checks to see if the move was a pawn move that went two spaces up
+// If the difference in from and to is 16, that means the pawn moved two square forward
+func isDoublePawnPush(from, to Square) bool {
+	fmt.Println("checking double pawn push")
+	fmt.Printf("from: %d  to: %d\n", from, to)
+	diff := from - to
+
+	if diff < 0 {
+		diff = -diff
+	}
+
+	return diff == 16
 }
