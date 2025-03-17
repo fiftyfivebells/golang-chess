@@ -71,18 +71,41 @@ func (b BitboardBoard) GetFENRepresentation() string {
 	return strings.TrimSuffix(fenString.String(), "/")
 }
 
-func (b *BitboardBoard) SetPieceAtPosition(p Piece, coord string) {
-	boardIndex := CoordToBoardIndex(coord)
-	b.squares[boardIndex] = p
+func (b *BitboardBoard) SetPieceAtPosition(p Piece, square Square) {
+	b.squares[square] = p
 
 	color := p.Color
 	pieceType := p.PieceType
 
-	b.pieces[color][pieceType].setBitAtSquare(boardIndex)
+	b.pieces[color][pieceType].setBitAtSquare(square)
 }
 
 func (b BitboardBoard) GetPieceAtSquare(sq Square) Piece {
 	return b.squares[sq]
+}
+
+// RemovePieceFromSquare takes a square and removes the piece from that square, which involves clearing
+// the piece from it's associated bitboard and setting the value at the square index in the square array
+// to NoPiece
+func (b *BitboardBoard) RemovePieceFromSquare(square Square) {
+	piece := b.squares[square]
+
+	if piece.PieceType != None {
+		color := piece.Color
+		pieceType := piece.PieceType
+
+		b.squares[square] = NoPiece
+		b.pieces[color][pieceType].clearBitAtSquare(square)
+	}
+}
+
+// MovePiece takes a piece and two squares (from and to), and moves the given piece to the "to" square
+// It first removes the pieces from the "from" and "to" squares, then places the given piece at the
+// destination square (the "to" square)
+func (b *BitboardBoard) MovePiece(piece Piece, from, to Square) {
+	b.RemovePieceFromSquare(from)
+	b.RemovePieceFromSquare(to)
+	b.SetPieceAtPosition(piece, to)
 }
 
 func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
@@ -107,7 +130,7 @@ func (b BitboardBoard) getAllPieces() Bitboard {
 	return bb
 }
 
-func (b BitboardBoard) getAllPiecesByColor(color Color) Bitboard {
+func (b BitboardBoard) GetAllPiecesByColor(color Color) Bitboard {
 	bb := Bitboard(0)
 
 	for pieceType := Pawn; pieceType < None; pieceType++ {
