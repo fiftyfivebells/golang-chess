@@ -15,7 +15,7 @@ func SquareToCoord(square Square) string {
 	file := square % 8
 	rank := square / 8
 
-	return string(rune('a'+file)) + string(rune('0'+rank+1))
+	return string(rune('h'-file)) + string(rune('0'+rank+1))
 }
 
 func SquareToFileRank(square Square) (int, int) {
