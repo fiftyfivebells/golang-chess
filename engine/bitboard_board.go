@@ -41,12 +41,24 @@ func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 	}
 }
 
+func (b *BitboardBoard) ClearBoard() {
+	for i := range b.squares {
+		b.squares[i] = NoPiece
+	}
+
+	for color := White; color <= Black; color++ {
+		for piece := Pawn; piece <= King; piece++ {
+			b.pieces[color][piece] = 0
+		}
+	}
+}
+
 func (b BitboardBoard) GetFENRepresentation() string {
 	var fenString strings.Builder
 
-	for rank := H8; rank >= H1 && rank <= A8; rank -= 8 {
+	for rank := A8; rank >= H1 && rank <= A8; rank -= 8 {
 		emptySquares := 0
-		for i := rank; i < rank+8; i++ {
+		for i := rank; i > rank-8; i-- {
 			piece := b.squares[i]
 
 			if piece.PieceType == None {
@@ -108,14 +120,45 @@ func (b *BitboardBoard) MovePiece(piece Piece, from, to Square) {
 	b.SetPieceAtPosition(piece, to)
 }
 
+func (b *BitboardBoard) CastleMove(kingFrom, kingTo Square) {
+	rookFrom, rookTo := CastlingRookPositions(kingFrom, kingTo)
+
+	color := White
+	if kingFrom == E8 {
+		color = Black
+	}
+
+	king := Piece{
+		Color:     color,
+		PieceType: King,
+	}
+	rook := Piece{
+		Color:     color,
+		PieceType: Rook,
+	}
+
+	b.RemovePieceFromSquare(kingFrom)
+	b.RemovePieceFromSquare(rookFrom)
+	b.SetPieceAtPosition(king, kingTo)
+	b.SetPieceAtPosition(rook, rookTo)
+}
+
 func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 	enemy := activeSide.EnemyColor()
 
-	pawnAttacks := (PawnPushes[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
+	pawnAttacks := (PawnAttacks[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
 	knightAttacks := (KnightMoves[sq] & b.getPiecesByColorAndType(enemy, Knight)) != 0
 	kingAttacks := (KingMoves[sq] & b.getPiecesByColorAndType(enemy, King)) != 0
 
 	return pawnAttacks || knightAttacks || kingAttacks
+}
+
+func (b BitboardBoard) SquareIsUnderAttackByPawn(sq Square, activeSide Color) bool {
+	enemy := activeSide.EnemyColor()
+
+	pawnAttacks := (PawnAttacks[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
+
+	return pawnAttacks
 }
 
 func (b BitboardBoard) getAllPieces() Bitboard {
