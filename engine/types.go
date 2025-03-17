@@ -46,6 +46,11 @@ type Piece struct {
 	Color     Color
 }
 
+var NoPiece = Piece{
+	PieceType: None,
+	Color:     Blank,
+}
+
 func (p Piece) String() string {
 	if p.Color == White {
 		switch p.PieceType {
