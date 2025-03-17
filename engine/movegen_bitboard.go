@@ -84,7 +84,7 @@ func (bmg *BitboardMoveGenerator) generatePawnMoves(activeSide Color, enPassant 
 
 		for pawnAttacks != 0 {
 			var move Move
-			to := moves.PopLSB()
+			to := pawnAttacks.PopLSB()
 
 			if isPromotion(to, activeSide) {
 				bmg.addPromotionMoves(from, to, true)
