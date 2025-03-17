@@ -20,12 +20,7 @@ func NewBitboardBoard(fen string) *BitboardBoard {
 
 func (b *BitboardBoard) SetBoardFromFEN(fen string) {
 
-	for i := range b.squares {
-		b.squares[i] = Piece{
-			PieceType: None,
-			Color:     Blank,
-		}
-	}
+	b.ClearBoard()
 
 	for i, square := 0, A8; i < len(fen); i++ {
 		char := fen[i]
