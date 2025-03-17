@@ -112,5 +112,9 @@ func (ca CastleAvailability) String() string {
 		availability.WriteString("q")
 	}
 
+	if ca == 0 {
+		availability.WriteString("-")
+	}
+
 	return availability.String()
 }
