@@ -141,11 +141,17 @@ func (b *BitboardBoard) CastleMove(kingFrom, kingTo Square) {
 func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 	enemy := activeSide.EnemyColor()
 
+	bishopMoves := b.GetBishopMoves(sq, activeSide)
+	rookMoves := b.GetRookMoves(sq, activeSide)
+
 	pawnAttacks := (PawnAttacks[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
 	knightAttacks := (KnightMoves[sq] & b.getPiecesByColorAndType(enemy, Knight)) != 0
+	bishopAttacks := (bishopMoves & b.getPiecesByColorAndType(enemy, Bishop)) != 0
+	rookAttacks := (rookMoves & b.getPiecesByColorAndType(enemy, Rook)) != 0
+	queenAttacks := ((bishopMoves | rookMoves) & b.getPiecesByColorAndType(enemy, Queen)) != 0
 	kingAttacks := (KingMoves[sq] & b.getPiecesByColorAndType(enemy, King)) != 0
 
-	return pawnAttacks || knightAttacks || kingAttacks
+	return pawnAttacks || knightAttacks || bishopAttacks || rookAttacks || queenAttacks || kingAttacks
 }
 
 func (b BitboardBoard) SquareIsUnderAttackByPawn(sq Square, activeSide Color) bool {
@@ -154,6 +160,42 @@ func (b BitboardBoard) SquareIsUnderAttackByPawn(sq Square, activeSide Color) bo
 	pawnAttacks := (PawnAttacks[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
 
 	return pawnAttacks
+}
+
+func (b BitboardBoard) generateSlidingMoves(square Square, activeSide Color, mask Bitboard) Bitboard {
+	squareBoard := SquareMasks[square]
+	occupied := b.getAllPieces()
+
+	bottom := ((occupied & mask) - (squareBoard << 1)) & mask
+	top := ReverseBitboard(ReverseBitboard((occupied & mask)) - 2*ReverseBitboard(squareBoard))
+
+	allies := b.GetAllPiecesByColor(activeSide)
+
+	return (bottom ^ top) & mask & ^allies
+}
+
+func (b BitboardBoard) GetBishopMoves(sq Square, activeSide Color) Bitboard {
+	allies := b.GetAllPiecesByColor(activeSide)
+
+	diagonalMask := DiagonalMasks[sq]
+	antiDiagonalMask := AntiDiagonalMasks[sq]
+
+	diagonal := b.generateSlidingMoves(sq, activeSide, diagonalMask)
+	antiDiagonal := b.generateSlidingMoves(sq, activeSide, antiDiagonalMask)
+
+	return (diagonal | antiDiagonal) & ^allies
+}
+
+func (b BitboardBoard) GetRookMoves(sq Square, activeSide Color) Bitboard {
+	allies := b.GetAllPiecesByColor(activeSide)
+
+	rank := RankMaskForSquare(sq)
+	file := FileMaskForSquare(sq)
+
+	horizontal := b.generateSlidingMoves(sq, activeSide, rank)
+	vertical := b.generateSlidingMoves(sq, activeSide, file)
+
+	return (horizontal | vertical) & ^allies
 }
 
 func (b BitboardBoard) getAllPieces() Bitboard {

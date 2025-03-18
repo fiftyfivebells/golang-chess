@@ -45,9 +45,9 @@ func (bmg *BitboardMoveGenerator) generateMovesByPiece(pieceType PieceType, from
 	case Knight:
 		moves = (KnightMoves[from] & ^activePieces)
 	case Rook:
-		moves = bmg.generateRookMoves(from, activeSide)
+		moves = bmg.board.GetRookMoves(from, activeSide)
 	case Bishop:
-		moves = bmg.generateBishopMoves(from, activeSide)
+		moves = bmg.board.GetBishopMoves(from, activeSide)
 	case Queen:
 		moves = bmg.generateQueenMoves(from, activeSide)
 	case King:
@@ -175,44 +175,8 @@ func (bmg *BitboardMoveGenerator) generateBlackCastles(occupied Bitboard, castle
 	}
 }
 
-func (bmg BitboardMoveGenerator) generateBishopMoves(from Square, activeSide Color) Bitboard {
-	allies := bmg.board.GetAllPiecesByColor(activeSide)
-
-	diagonalMask := DiagonalMasks[from]
-	antiDiagonalMask := AntiDiagonalMasks[from]
-
-	diagonal := bmg.generateSlidingMoves(activeSide, from, diagonalMask)
-	antiDiagonal := bmg.generateSlidingMoves(activeSide, from, antiDiagonalMask)
-
-	return (diagonal | antiDiagonal) & ^allies
-}
-
-func (bmg BitboardMoveGenerator) generateRookMoves(from Square, activeSide Color) Bitboard {
-	allies := bmg.board.GetAllPiecesByColor(activeSide)
-
-	rank := RankMaskForSquare(from)
-	file := FileMaskForSquare(from)
-
-	horizontal := bmg.generateSlidingMoves(activeSide, from, rank)
-	vertical := bmg.generateSlidingMoves(activeSide, from, file)
-
-	return (horizontal | vertical) & ^allies
-}
-
-func (bmg BitboardMoveGenerator) generateSlidingMoves(activeSide Color, square Square, mask Bitboard) Bitboard {
-	squareBoard := SquareMasks[square]
-	occupied := bmg.board.getAllPieces()
-
-	bottom := ((occupied & mask) - (squareBoard << 1)) & mask
-	top := ReverseBitboard(ReverseBitboard((occupied & mask)) - 2*ReverseBitboard(squareBoard))
-
-	allies := bmg.board.GetAllPiecesByColor(activeSide)
-
-	return (bottom ^ top) & mask & ^allies
-}
-
 func (bmg BitboardMoveGenerator) generateQueenMoves(from Square, activeSide Color) Bitboard {
-	return bmg.generateBishopMoves(from, activeSide) | bmg.generateRookMoves(from, activeSide)
+	return bmg.board.GetBishopMoves(from, activeSide) | bmg.board.GetRookMoves(from, activeSide)
 }
 
 func (bmg *BitboardMoveGenerator) createMovesFromBitboard(from Square, moves, targets Bitboard, pieceType PieceType) {
