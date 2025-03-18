@@ -83,7 +83,7 @@ func (gs *GameState) ApplyMove(move Move) {
 	}
 
 	// The halfmove clock gets reset if the move was a capture or if the moved piece was a pawn
-	if IsAttackMove(moveType) && previous.Moved.PieceType == Pawn {
+	if IsAttackMove(moveType) || previous.Moved.PieceType == Pawn {
 		gs.HalfMove = 0
 	}
 
