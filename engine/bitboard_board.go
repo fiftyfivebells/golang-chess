@@ -51,9 +51,11 @@ func (b *BitboardBoard) ClearBoard() {
 func (b BitboardBoard) GetFENRepresentation() string {
 	var fenString strings.Builder
 
-	for rank := A8; rank >= H1 && rank <= A8; rank -= 8 {
+	for rank := 8; rank > 0; rank-- {
 		emptySquares := 0
-		for i := rank; i > rank-8; i-- {
+		startingSquare := rank*8 - 1
+
+		for i := startingSquare; i > startingSquare-8; i-- {
 			piece := b.squares[i]
 
 			if piece.PieceType == None {
