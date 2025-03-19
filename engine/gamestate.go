@@ -14,6 +14,7 @@ type GameState struct {
 	HalfMove     uint16
 	FullMove     byte
 
+	StatePly       uint16
 	PreviousStates []IrreversibleState
 
 	moveGen MoveGenerator
@@ -27,12 +28,19 @@ type IrreversibleState struct {
 	Destination  Piece
 }
 
-func InitializeGameState(board Board, moveGen MoveGenerator) GameState {
-	return GameState{
+func InitializeGameState(fen string) GameState {
+	board := BitboardBoard{}
+	moveGen := NewBitboardMoveGenerator(&board)
+
+	gs := GameState{
 		FullMove: 1,
-		Board:    board,
+		Board:    &board,
 		moveGen:  moveGen,
 	}
+
+	gs.SetStateFromFENString(fen)
+
+	return gs
 }
 
 func (gs *GameState) GetMovesForPosition() []Move {
@@ -96,6 +104,7 @@ func (gs *GameState) ApplyMove(move Move) {
 		}
 	}
 
+	gs.StatePly++
 	gs.PreviousStates = append(gs.PreviousStates, previous)
 
 	// The fullmove number is incremented only after the black side has moved
@@ -104,6 +113,50 @@ func (gs *GameState) ApplyMove(move Move) {
 	}
 
 	gs.ActiveSide = gs.ActiveSide.EnemyColor()
+}
+
+func (gs *GameState) UnapplyMove(move Move) {
+	gs.StatePly--
+	previous := gs.PreviousStates[gs.StatePly]
+
+	gs.CastleRights = previous.CastleRights
+	gs.EPSquare = previous.EPSquare
+	gs.HalfMove = previous.HalfMove
+
+	gs.ActiveSide = gs.ActiveSide.EnemyColor()
+	if gs.ActiveSide == Black {
+		gs.FullMove--
+	}
+
+	from := move.FromSquare()
+	to := move.ToSquare()
+	moveType := move.MoveType()
+
+	movingPiece := Piece{
+		Color:     gs.ActiveSide,
+		PieceType: move.PieceType(),
+	}
+
+	switch moveType {
+	case Quiet:
+		gs.Board.MovePiece(movingPiece, to, from)
+
+	case Capture:
+		gs.Board.MovePiece(movingPiece, to, from)
+		gs.Board.SetPieceAtPosition(previous.Destination, to)
+
+	case Promotion:
+		gs.Board.RemovePieceFromSquare(to)
+		gs.Board.SetPieceAtPosition(previous.Moved, from)
+
+	case CapturePromotion:
+		gs.Board.RemovePieceFromSquare(to)
+		gs.Board.SetPieceAtPosition(previous.Destination, to)
+		gs.Board.SetPieceAtPosition(previous.Moved, from)
+
+	case CastleKingside, CastleQueenside:
+		gs.Board.ReverseCastleMove(from, to)
+	}
 }
 
 func (gs GameState) GetGameStateFENString() string {
