@@ -138,6 +138,29 @@ func (b *BitboardBoard) CastleMove(kingFrom, kingTo Square) {
 	b.SetPieceAtPosition(rook, rookTo)
 }
 
+func (b *BitboardBoard) ReverseCastleMove(kingFrom, kingTo Square) {
+	rookFrom, rookTo := CastlingRookPositions(kingFrom, kingTo)
+
+	color := White
+	if kingFrom == E8 {
+		color = Black
+	}
+
+	king := Piece{
+		Color:     color,
+		PieceType: King,
+	}
+	rook := Piece{
+		Color:     color,
+		PieceType: Rook,
+	}
+
+	b.RemovePieceFromSquare(kingTo)
+	b.RemovePieceFromSquare(rookTo)
+	b.SetPieceAtPosition(king, kingFrom)
+	b.SetPieceAtPosition(rook, rookFrom)
+}
+
 func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 	enemy := activeSide.EnemyColor()
 
