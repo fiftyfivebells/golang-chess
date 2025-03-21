@@ -43,6 +43,16 @@ func InitializeGameState(fen string) GameState {
 	return gs
 }
 
+func (gs *GameState) ClearGameState() {
+	gs.Board.ClearBoard()
+	gs.CastleRights = 0
+	gs.EPSquare = NoSquare
+	gs.HalfMove = 0
+	gs.FullMove = 1
+
+	gs.StatePly = 0
+}
+
 func (gs *GameState) GetMovesForPosition() []Move {
 	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
 	return gs.moveGen.GetMoves()
