@@ -41,6 +41,25 @@ const (
 	None   PieceType = 6
 )
 
+func (pt PieceType) String() string {
+	switch pt {
+	case Pawn:
+		return "p"
+	case Knight:
+		return "n"
+	case Bishop:
+		return "b"
+	case Rook:
+		return "r"
+	case Queen:
+		return "q"
+	case King:
+		return "k"
+	default:
+		return ""
+	}
+}
+
 type Piece struct {
 	PieceType PieceType
 	Color     Color
