@@ -97,7 +97,7 @@ func (gs *GameState) ApplyMove(move Move) {
 
 	if previous.Moved.PieceType == Pawn && isDoublePawnPush(from, to) {
 		pawnDirection := gs.getPawnDirection()
-		epSquare := Square(int(from) - pawnDirection)
+		epSquare := Square(int(from) + pawnDirection)
 
 		if gs.Board.SquareIsUnderAttackByPawn(epSquare, gs.ActiveSide) {
 			gs.EPSquare = epSquare
@@ -144,6 +144,12 @@ func (gs *GameState) UnapplyMove(move Move) {
 	case Capture:
 		gs.Board.MovePiece(movingPiece, to, from)
 		gs.Board.SetPieceAtPosition(previous.Destination, to)
+
+	case EnPassant:
+		gs.Board.MovePiece(movingPiece, to, from)
+		direction := gs.getPawnDirection()
+		capturedSquare := Square(int(gs.EPSquare) - direction)
+		gs.Board.SetPieceAtPosition(previous.Destination, capturedSquare)
 
 	case Promotion:
 		gs.Board.RemovePieceFromSquare(to)
@@ -256,7 +262,7 @@ func (gs GameState) String() string {
 func (gs GameState) getPawnDirection() int {
 	pawnDirection := North
 	if gs.ActiveSide == Black {
-		pawnDirection = South
+		pawnDirection = -North // north and south are both 8, so we'll just negate north to get -8
 	}
 
 	return pawnDirection
