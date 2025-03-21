@@ -14,4 +14,7 @@ const (
 	A7, B7, C7, D7, E7, F7, G7, H7 Square = 55, 54, 53, 52, 51, 50, 49, 48
 	A8, B8, C8, D8, E8, F8, G8, H8 Square = 63, 62, 61, 60, 59, 58, 57, 56
 	NoSquare                       Square = 64
+
+	EngineName   = "Not So Deep Blue - Go Edition"
+	EngineAuthor = "Stephen Bell"
 )
