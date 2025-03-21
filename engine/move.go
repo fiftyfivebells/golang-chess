@@ -87,6 +87,7 @@ func (move Move) PromotionPieceType() PieceType {
 func (move Move) String() string {
 	from := SquareToCoord(move.FromSquare())
 	to := SquareToCoord(move.ToSquare())
+	promotionPiece := move.PromotionPieceType()
 
-	return fmt.Sprintf("%s%s", from, to)
+	return fmt.Sprintf("%s%s%s", from, to, promotionPiece)
 }
