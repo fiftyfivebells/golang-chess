@@ -167,9 +167,9 @@ func (bmg *BitboardMoveGenerator) generateBlackCastles(occupied Bitboard, castle
 	}
 
 	if (castleAvailability&QueensideBlackCastle) != 0 &&
-		!bmg.board.SquareIsUnderAttack(B8, White) &&
-		!bmg.board.SquareIsUnderAttack(C8, White) &&
-		!bmg.board.SquareIsUnderAttack(D8, White) &&
+		!bmg.board.SquareIsUnderAttack(B8, Black) &&
+		!bmg.board.SquareIsUnderAttack(C8, Black) &&
+		!bmg.board.SquareIsUnderAttack(D8, Black) &&
 		(occupied&B8C8D8Mask) == 0 {
 		bmg.addMove(NewMove(E8, C8, King, CastleQueenside))
 	}
