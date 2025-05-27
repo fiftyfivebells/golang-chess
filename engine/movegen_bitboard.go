@@ -69,9 +69,8 @@ func (bmg *BitboardMoveGenerator) generatePawnMoves(activeSide Color, enPassant 
 			doubleMove = ((singleMove & Rank6) >> South) & ^allPieces
 		}
 
-		moves := singleMove | doubleMove
-		for moves != 0 {
-			to := moves.PopLSB()
+		for singleMove != 0 {
+			to := singleMove.PopLSB()
 
 			if isPromotion(to, activeSide) {
 				bmg.addPromotionMoves(from, to, false)
@@ -79,6 +78,13 @@ func (bmg *BitboardMoveGenerator) generatePawnMoves(activeSide Color, enPassant 
 			}
 
 			move := NewMove(from, to, Pawn, Quiet)
+			bmg.addMove(move)
+		}
+
+		for doubleMove != 0 {
+			to := doubleMove.PopLSB()
+
+			move := NewMove(from, to, Pawn, DoublePush)
 			bmg.addMove(move)
 		}
 

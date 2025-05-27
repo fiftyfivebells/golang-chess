@@ -277,15 +277,3 @@ func (gs GameState) getPawnDirection() int {
 
 	return pawnDirection
 }
-
-// isDoublePawnPush checks to see if the move was a pawn move that went two spaces up
-// If the difference in from and to is 16, that means the pawn moved two square forward
-func isDoublePawnPush(from, to Square) bool {
-	diff := from - to
-
-	if diff < 0 {
-		diff = -diff
-	}
-
-	return diff == 16
-}
