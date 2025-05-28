@@ -115,6 +115,30 @@ const (
 	QueensideBlackCastle CastleAvailability = 0b1000
 )
 
+func (ca *CastleAvailability) RemoveAllRights(color Color) {
+	if color == White {
+		*ca &= ^(KingsideWhiteCastle | QueensideWhiteCastle)
+	} else {
+		*ca &= ^(KingsideBlackCastle | QueensideBlackCastle)
+	}
+}
+
+func (ca *CastleAvailability) Remove(color Color, side string) {
+	if side == "kingside" {
+		if color == White {
+			*ca &= ^KingsideWhiteCastle
+		} else {
+			*ca &= ^KingsideBlackCastle
+		}
+	} else if side == "queenside" {
+		if color == White {
+			*ca &= ^QueensideWhiteCastle
+		} else {
+			*ca &= ^QueensideBlackCastle
+		}
+	}
+}
+
 func (ca CastleAvailability) String() string {
 	var availability strings.Builder
 
