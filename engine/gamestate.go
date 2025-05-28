@@ -15,7 +15,7 @@ type GameState struct {
 	FullMove     byte
 
 	StatePly       uint16
-	PreviousStates []IrreversibleState
+	PreviousStates [100]IrreversibleState
 
 	moveGen MoveGenerator
 }
@@ -55,10 +55,20 @@ func (gs *GameState) ClearGameState() {
 
 func (gs *GameState) GetMovesForPosition() []Move {
 	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
-	return gs.moveGen.GetMoves()
+	moves := gs.moveGen.GetMoves()
+
+	var legalMoves []Move
+	for _, move := range moves {
+		if gs.ApplyMove(move) {
+			legalMoves = append(legalMoves, move)
+		}
+		gs.UnapplyMove(move)
+	}
+
+	return legalMoves
 }
 
-func (gs *GameState) ApplyMove(move Move) {
+func (gs *GameState) ApplyMove(move Move) bool {
 	previous := IrreversibleState{
 		CastleRights: gs.CastleRights,
 		EPSquare:     gs.EPSquare,
@@ -82,6 +92,14 @@ func (gs *GameState) ApplyMove(move Move) {
 	switch moveType {
 	case Quiet, Capture:
 		gs.Board.MovePiece(movingPiece, from, to)
+	case DoublePush:
+		gs.Board.MovePiece(movingPiece, from, to)
+		pawnDirection := gs.getPawnDirection()
+		epSquare := Square(int(from) + pawnDirection)
+
+		if gs.Board.SquareIsUnderAttackByPawn(epSquare, gs.ActiveSide) {
+			gs.EPSquare = epSquare
+		}
 	case Promotion, CapturePromotion:
 		promotionPiece := Piece{
 			Color:     gs.ActiveSide,
@@ -100,12 +118,17 @@ func (gs *GameState) ApplyMove(move Move) {
 		gs.Board.RemovePieceFromSquare(capturedPawn)
 	}
 
+	// Update castle rights
+	if movingPiece.PieceType == King || movingPiece.PieceType == Rook || previous.Destination.PieceType == Rook {
+		gs.UpdateCastleRights(movingPiece, previous.Destination, move)
+	}
+
 	// The halfmove clock gets reset if the move was a capture or if the moved piece was a pawn
 	if IsAttackMove(moveType) || previous.Moved.PieceType == Pawn {
 		gs.HalfMove = 0
 	}
 
-	if previous.Moved.PieceType == Pawn && isDoublePawnPush(from, to) {
+	if previous.Moved.PieceType == Pawn && move.MoveType() == DoublePush {
 		pawnDirection := gs.getPawnDirection()
 		epSquare := Square(int(from) + pawnDirection)
 
@@ -114,8 +137,8 @@ func (gs *GameState) ApplyMove(move Move) {
 		}
 	}
 
+	gs.PreviousStates[gs.StatePly] = previous
 	gs.StatePly++
-	gs.PreviousStates = append(gs.PreviousStates, previous)
 
 	// The fullmove number is incremented only after the black side has moved
 	if gs.ActiveSide == Black {
@@ -123,6 +146,8 @@ func (gs *GameState) ApplyMove(move Move) {
 	}
 
 	gs.ActiveSide = gs.ActiveSide.EnemyColor()
+
+	return !gs.Board.KingIsUnderAttack(gs.ActiveSide.EnemyColor())
 }
 
 func (gs *GameState) UnapplyMove(move Move) {
@@ -142,36 +167,65 @@ func (gs *GameState) UnapplyMove(move Move) {
 	to := move.ToSquare()
 	moveType := move.MoveType()
 
-	movingPiece := Piece{
-		Color:     gs.ActiveSide,
-		PieceType: move.PieceType(),
-	}
+	movingPiece := previous.Moved
+	capturedPiece := previous.Destination
+
+	// set the moved piece back where it came from
+	gs.Board.SetPieceAtPosition(movingPiece, from)
 
 	switch moveType {
-	case Quiet:
-		gs.Board.MovePiece(movingPiece, to, from)
+	case Quiet, DoublePush:
+		gs.Board.RemovePieceFromSquare(to)
 
 	case Capture:
-		gs.Board.MovePiece(movingPiece, to, from)
-		gs.Board.SetPieceAtPosition(previous.Destination, to)
+		gs.Board.RemovePieceFromSquare(to)
+		gs.Board.SetPieceAtPosition(capturedPiece, to)
 
 	case EnPassant:
-		gs.Board.MovePiece(movingPiece, to, from)
 		direction := gs.getPawnDirection()
-		capturedSquare := Square(int(gs.EPSquare) - direction)
+		capturedSquare := Square(int(to) - direction)
+
+		gs.Board.RemovePieceFromSquare(to)
 		gs.Board.SetPieceAtPosition(previous.Destination, capturedSquare)
 
 	case Promotion:
 		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(previous.Moved, from)
 
 	case CapturePromotion:
 		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(previous.Destination, to)
-		gs.Board.SetPieceAtPosition(previous.Moved, from)
+		gs.Board.SetPieceAtPosition(capturedPiece, to)
+		gs.Board.SetPieceAtPosition(movingPiece, from)
 
 	case CastleKingside, CastleQueenside:
 		gs.Board.ReverseCastleMove(from, to)
+	}
+}
+
+func (gs *GameState) UpdateCastleRights(moved Piece, captured Piece, move Move) {
+	if moved.PieceType == King {
+		gs.CastleRights.RemoveAllRights(gs.ActiveSide)
+	} else if moved.PieceType == Rook {
+		gs.UpdateRookRights(gs.ActiveSide, move.FromSquare())
+	} else if captured.PieceType == Rook {
+		gs.UpdateRookRights(gs.ActiveSide.EnemyColor(), move.ToSquare())
+	}
+}
+
+func (gs *GameState) UpdateRookRights(color Color, square Square) {
+	kingside, queenside := rookSquares(color)
+
+	if square == kingside {
+		gs.CastleRights.Remove(color, "kingside")
+	} else if square == queenside {
+		gs.CastleRights.Remove(color, "queenside")
+	}
+}
+
+func rookSquares(color Color) (Square, Square) {
+	if color == White {
+		return H1, A1
+	} else {
+		return H8, A8
 	}
 }
 
