@@ -83,6 +83,10 @@ func (b BitboardBoard) GetFENRepresentation() string {
 func (b *BitboardBoard) SetPieceAtPosition(p Piece, square Square) {
 	b.squares[square] = p
 
+	if p == NoPiece {
+		return
+	}
+
 	color := p.Color
 	pieceType := p.PieceType
 
@@ -177,6 +181,19 @@ func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 	kingAttacks := (KingMoves[sq] & b.getPiecesByColorAndType(enemy, King)) != 0
 
 	return pawnAttacks || knightAttacks || bishopAttacks || rookAttacks || queenAttacks || kingAttacks
+}
+
+func (b BitboardBoard) KingIsUnderAttack(color Color) bool {
+
+	var kingIndex Square
+	for i, piece := range b.squares {
+		if piece.Color == color && piece.PieceType == King {
+			kingIndex = Square(i)
+			break
+		}
+	}
+
+	return b.SquareIsUnderAttack(kingIndex, color)
 }
 
 func (b BitboardBoard) SquareIsUnderAttackByPawn(sq Square, activeSide Color) bool {

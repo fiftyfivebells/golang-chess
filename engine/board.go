@@ -10,6 +10,7 @@ type Board interface {
 	MovePiece(p Piece, from, to Square)
 	CastleMove(kingFrom, kingTo Square)
 	ReverseCastleMove(kingFrom, kingTo Square)
+	KingIsUnderAttack(color Color) bool
 	SquareIsUnderAttack(sq Square, activeSide Color) bool
 	SquareIsUnderAttackByPawn(sq Square, activeSide Color) bool
 }
