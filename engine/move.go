@@ -28,6 +28,7 @@ type MoveType byte
 const (
 	NoFlag MoveType = iota
 	Quiet
+	DoublePush
 	Capture
 	CastleKingside
 	CastleQueenside
