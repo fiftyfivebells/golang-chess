@@ -66,10 +66,12 @@ func (u UCI) Loop() {
 			fmt.Println("readyok")
 		} else if commandContains(command, "ucinewgame") {
 			u.newgameResponse()
-		} else if commandContains(command, "posiiton") {
+		} else if commandContains(command, "position") {
 			u.positionResponse(command)
 		} else if commandContains(command, "go") {
-
+			u.goResponse()
+		} else if commandContains(command, "printposition") {
+			fmt.Println(u.state)
 		} else if commandContains(command, "quit") {
 			break
 		}
