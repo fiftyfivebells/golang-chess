@@ -26,31 +26,31 @@ It's not the best, but it's... yours.
 
 ## Getting Started
 
-Work in progress...installation instructions coming soon.
-<!-- <\!-- ### 📦 Installation -\-> -->
 
-<!-- <\!-- ```bash -\-> -->
-<!-- <\!-- git clone https://github.com/fiftyfivebells/golang-chess.git -\-> -->
-<!-- <\!-- cd not-so-deep-blue-go -\-> -->
-<!-- <\!-- go build -o nsdb -\-> -->
-<!-- <\!-- ``` -\-> -->
+### 📦 Installation
 
-<!-- Now you can run it directly or load it into a GUI like [Arena](http://www.playwitharena.de/), [CuteChess](https://cutechess.com/), or [Lucas Chess](https://lucaschess.pythonanywhere.com/). -->
+```bash
+git clone https://github.com/fiftyfivebells/golang-chess.git
+cd not-so-deep-blue-go
+go build -o nsdb
+```
 
-<!-- --- -->
+Now you can run it directly or load it into a GUI like [Arena](http://www.playwitharena.de/), [CuteChess](https://cutechess.com/), or [Lucas Chess](https://lucaschess.pythonanywhere.com/).
 
-<!-- ### 🕹️ Using with a GUI -->
+---
 
-<!-- 1. Launch your GUI of choice -->
-<!-- 2. Add a new UCI engine and point it to the `nsdb` binary -->
-<!-- 3. Play -->
+### 🕹️ Using with a GUI
+
+1. Launch your GUI of choice
+2. Add a new UCI engine and point it to the `nsdb` binary
+3. Play
 
 ---
 
 ## Example UCI Session (CLI)
 
 ```bash
-$ ./nsdb
+$ ./nsdb-go-edition
 uci
 id name Not So Deep Blue - Go Edition
 id author Stephen Bell
