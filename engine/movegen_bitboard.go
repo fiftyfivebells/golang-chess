@@ -23,50 +23,50 @@ func (bmg BitboardMoveGenerator) GetMoves() []Move {
 func (bmg *BitboardMoveGenerator) GenerateMoves(activeSide Color, enPassant Square, castleAvailability CastleAvailability) {
 	bmg.moves = bmg.moves[:0]
 	targets := bmg.board.GetAllPiecesByColor(activeSide.EnemyColor())
+	occupied := bmg.board.getAllPieces()
+	activePieces := bmg.board.GetAllPiecesByColor(activeSide)
 
 	for pieceType := Knight; pieceType < None; pieceType++ {
 		pieceBoard := bmg.board.getPiecesByColorAndType(activeSide, pieceType)
 
 		for pieceBoard != 0 {
 			square := pieceBoard.PopLSB()
-			bmg.generateMovesByPiece(pieceType, square, activeSide, targets)
+			bmg.generateMovesByPiece(pieceType, square, occupied, activePieces, targets)
 		}
 	}
 
-	bmg.generatePawnMoves(activeSide, enPassant)
-	bmg.generateCastlingMoves(activeSide, castleAvailability)
+	bmg.generatePawnMoves(activeSide, enPassant, occupied)
+	bmg.generateCastlingMoves(activeSide, castleAvailability, occupied)
 }
 
-func (bmg *BitboardMoveGenerator) generateMovesByPiece(pieceType PieceType, from Square, activeSide Color, targets Bitboard) {
-	activePieces := bmg.board.GetAllPiecesByColor(activeSide)
+func (bmg *BitboardMoveGenerator) generateMovesByPiece(pieceType PieceType, from Square, occupied, allies, targets Bitboard) {
 
 	var moves Bitboard
 	switch pieceType {
 	case Knight:
-		moves = (KnightMoves[from] & ^activePieces)
+		moves = (KnightMoves[from] & ^allies)
 	case Rook:
-		moves = bmg.board.GetRookMoves(from, activeSide)
+		moves = bmg.board.GetRookMoves(from, occupied, allies)
 	case Bishop:
-		moves = bmg.board.GetBishopMoves(from, activeSide)
+		moves = bmg.board.GetBishopMoves(from, occupied, allies)
 	case Queen:
-		moves = bmg.generateQueenMoves(from, activeSide)
+		moves = bmg.generateQueenMoves(from, occupied, allies)
 	case King:
-		moves = (KingMoves[from] & ^activePieces)
+		moves = (KingMoves[from] & ^allies)
 	}
 
 	bmg.createMovesFromBitboard(from, moves, targets, pieceType)
 }
 
-func (bmg *BitboardMoveGenerator) generatePawnMoves(activeSide Color, enPassant Square) {
-	allPieces := bmg.board.getAllPieces()
+func (bmg *BitboardMoveGenerator) generatePawnMoves(activeSide Color, enPassant Square, occupied Bitboard) {
 	pawns := bmg.board.getPiecesByColorAndType(activeSide, Pawn)
 
 	for pawns != 0 {
 		from := pawns.PopLSB()
-		singleMove := PawnPushes[activeSide][from] & ^allPieces
-		doubleMove := ((singleMove & Rank3) << North) & ^allPieces
+		singleMove := PawnPushes[activeSide][from] & ^occupied
+		doubleMove := ((singleMove & Rank3) << North) & ^occupied
 		if activeSide == Black {
-			doubleMove = ((singleMove & Rank6) >> South) & ^allPieces
+			doubleMove = ((singleMove & Rank6) >> South) & ^occupied
 		}
 
 		for singleMove != 0 {
@@ -137,9 +137,7 @@ func (bmg *BitboardMoveGenerator) addPromotionMoves(from, to Square, isCapture b
 	}
 }
 
-func (bmg *BitboardMoveGenerator) generateCastlingMoves(activeSide Color, castleAvailability CastleAvailability) {
-	occupied := bmg.board.getAllPieces()
-
+func (bmg *BitboardMoveGenerator) generateCastlingMoves(activeSide Color, castleAvailability CastleAvailability, occupied Bitboard) {
 	if !bmg.board.KingIsUnderAttack(activeSide) {
 		if activeSide == White {
 			bmg.generateWhiteCastles(occupied, castleAvailability)
@@ -182,8 +180,8 @@ func (bmg *BitboardMoveGenerator) generateBlackCastles(occupied Bitboard, castle
 	}
 }
 
-func (bmg BitboardMoveGenerator) generateQueenMoves(from Square, activeSide Color) Bitboard {
-	return bmg.board.GetBishopMoves(from, activeSide) | bmg.board.GetRookMoves(from, activeSide)
+func (bmg BitboardMoveGenerator) generateQueenMoves(from Square, occupied, allies Bitboard) Bitboard {
+	return bmg.board.GetBishopMoves(from, occupied, allies) | bmg.board.GetRookMoves(from, occupied, allies)
 }
 
 func (bmg *BitboardMoveGenerator) createMovesFromBitboard(from Square, moves, targets Bitboard, pieceType PieceType) {
