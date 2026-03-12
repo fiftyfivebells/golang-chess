@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func Perft(state GameState, depth int) int64 {
 	if depth == 0 {
@@ -52,6 +55,7 @@ func PerftDivide(state GameState, depth int) int64 {
 	moves := state.GetMovesForPosition()
 
 	var total int64 = 0
+	start := time.Now()
 
 	for i := 0; i < len(moves); i++ {
 		move := moves[i]
@@ -65,6 +69,10 @@ func PerftDivide(state GameState, depth int) int64 {
 		state.UnapplyMove(move)
 	}
 
+	elapsed := time.Since(start)
+	nps := int64(float64(total) / elapsed.Seconds())
 	fmt.Printf("Total nodes: %d\n", total)
+	fmt.Printf("Time: %s\n", elapsed)
+	fmt.Printf("NPS: %d\n", nps)
 	return total
 }
