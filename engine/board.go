@@ -7,8 +7,10 @@ import (
 )
 
 type Board struct {
-	pieces  [2][6]Bitboard
-	squares [64]Piece
+	pieces    [2][6]Bitboard
+	squares   [64]Piece
+	colorBB   [2]Bitboard
+	occupancy Bitboard
 }
 
 func NewBoard(fen string) *Board {
@@ -27,8 +29,7 @@ func (b *Board) SetBoardFromFEN(fen string) {
 		switch byte(char) {
 		case 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k':
 			piece := CharToPiece[char]
-			b.pieces[piece.Color][piece.PieceType].setBitAtSquare(square)
-			b.squares[square] = piece
+			b.SetPieceAtPosition(piece, square)
 			square--
 		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			square -= Square(char - '0')
@@ -45,7 +46,9 @@ func (b *Board) ClearBoard() {
 		for piece := Pawn; piece <= King; piece++ {
 			b.pieces[color][piece] = 0
 		}
+		b.colorBB[color] = 0
 	}
+	b.occupancy = 0
 }
 
 func (b Board) GetFENRepresentation() string {
@@ -87,10 +90,9 @@ func (b *Board) SetPieceAtPosition(p Piece, square Square) {
 		return
 	}
 
-	color := p.Color
-	pieceType := p.PieceType
-
-	b.pieces[color][pieceType].setBitAtSquare(square)
+	b.pieces[p.Color][p.PieceType].setBitAtSquare(square)
+	b.colorBB[p.Color].setBitAtSquare(square)
+	b.occupancy.setBitAtSquare(square)
 }
 
 func (b Board) GetPieceAtSquare(sq Square) Piece {
@@ -104,11 +106,10 @@ func (b *Board) RemovePieceFromSquare(square Square) {
 	piece := b.squares[square]
 
 	if piece.PieceType != None {
-		color := piece.Color
-		pieceType := piece.PieceType
-
+		b.pieces[piece.Color][piece.PieceType].clearBitAtSquare(square)
+		b.colorBB[piece.Color].clearBitAtSquare(square)
+		b.occupancy.clearBitAtSquare(square)
 		b.squares[square] = NoPiece
-		b.pieces[color][pieceType].clearBitAtSquare(square)
 	}
 }
 
@@ -235,25 +236,11 @@ func (b Board) GetRookMoves(sq Square, occupied, allies Bitboard) Bitboard {
 }
 
 func (b Board) getAllPieces() Bitboard {
-	bb := Bitboard(0)
-
-	for color := White; color < Blank; color++ {
-		for pieceType := Pawn; pieceType < None; pieceType++ {
-			bb |= b.pieces[color][pieceType]
-		}
-	}
-
-	return bb
+	return b.occupancy
 }
 
 func (b Board) GetAllPiecesByColor(color Color) Bitboard {
-	bb := Bitboard(0)
-
-	for pieceType := Pawn; pieceType < None; pieceType++ {
-		bb |= b.pieces[color][pieceType]
-	}
-
-	return bb
+	return b.colorBB[color]
 }
 
 func (b Board) getPiecesByColorAndType(color Color, pieceType PieceType) Bitboard {
