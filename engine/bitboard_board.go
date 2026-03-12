@@ -169,20 +169,27 @@ func (b *BitboardBoard) ReverseCastleMove(kingFrom, kingTo Square) {
 
 func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 	enemy := activeSide.EnemyColor()
+
+	if (PawnAttacks[activeSide][sq] & b.pieces[enemy][Pawn]) != 0 {
+		return true
+	}
+	if (KnightMoves[sq] & b.pieces[enemy][Knight]) != 0 {
+		return true
+	}
+	if (KingMoves[sq] & b.pieces[enemy][King]) != 0 {
+		return true
+	}
+
 	allies := b.GetAllPiecesByColor(activeSide)
 	occupied := b.getAllPieces()
 
 	bishopMoves := b.GetBishopMoves(sq, occupied, allies)
+	if (bishopMoves & (b.pieces[enemy][Bishop] | b.pieces[enemy][Queen])) != 0 {
+		return true
+	}
+
 	rookMoves := b.GetRookMoves(sq, occupied, allies)
-
-	pawnAttacks := (PawnAttacks[activeSide][sq] & b.getPiecesByColorAndType(enemy, Pawn)) != 0
-	knightAttacks := (KnightMoves[sq] & b.getPiecesByColorAndType(enemy, Knight)) != 0
-	bishopAttacks := (bishopMoves & b.getPiecesByColorAndType(enemy, Bishop)) != 0
-	rookAttacks := (rookMoves & b.getPiecesByColorAndType(enemy, Rook)) != 0
-	queenAttacks := ((bishopMoves | rookMoves) & b.getPiecesByColorAndType(enemy, Queen)) != 0
-	kingAttacks := (KingMoves[sq] & b.getPiecesByColorAndType(enemy, King)) != 0
-
-	return pawnAttacks || knightAttacks || bishopAttacks || rookAttacks || queenAttacks || kingAttacks
+	return (rookMoves & (b.pieces[enemy][Rook] | b.pieces[enemy][Queen])) != 0
 }
 
 func (b BitboardBoard) KingIsUnderAttack(color Color) bool {
