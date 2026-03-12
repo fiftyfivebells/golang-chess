@@ -186,15 +186,7 @@ func (b BitboardBoard) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 }
 
 func (b BitboardBoard) KingIsUnderAttack(color Color) bool {
-
-	var kingIndex Square
-	for i, piece := range b.squares {
-		if piece.Color == color && piece.PieceType == King {
-			kingIndex = Square(i)
-			break
-		}
-	}
-
+	kingIndex := b.pieces[color][King].lsb()
 	return b.SquareIsUnderAttack(kingIndex, color)
 }
 
