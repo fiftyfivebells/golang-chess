@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -42,6 +43,16 @@ func (u *UCI) positionResponse(command string) {
 	u.state = InitializeGameState(fen)
 }
 
+func (u UCI) perftResponse(command string) {
+	args := strings.TrimPrefix(command, "go perft ")
+	depth, err := strconv.Atoi(strings.TrimSpace(args))
+	if err != nil {
+		fmt.Printf("invalid depth: %s\n", args)
+		return
+	}
+	PerftDivide(u.state, depth)
+}
+
 func (u UCI) goResponse() {
 	moves := u.state.GetMovesForPosition()
 
@@ -68,6 +79,8 @@ func (u UCI) Loop() {
 			u.newgameResponse()
 		} else if commandContains(command, "position") {
 			u.positionResponse(command)
+		} else if commandContains(command, "go perft") {
+			u.perftResponse(command)
 		} else if commandContains(command, "go") {
 			u.goResponse()
 		} else if commandContains(command, "printposition") {
