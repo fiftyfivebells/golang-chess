@@ -11,7 +11,7 @@ func TestBoardFromFEN(t *testing.T) {
 		expected Piece
 	}
 
-	board := BitboardBoard{}
+	board := Board{}
 	InitializeBitMasks()
 
 	t.Run("initializes board from starting fen string", func(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 )
 
 type GameState struct {
-	Board        Board
+	Board        *Board
 	ActiveSide   Color
 	CastleRights CastleAvailability
 	EPSquare     Square
@@ -17,7 +17,7 @@ type GameState struct {
 	StatePly       uint16
 	PreviousStates [100]IrreversibleState
 
-	moveGen MoveGenerator
+	moveGen *MoveGen
 }
 
 type IrreversibleState struct {
@@ -29,8 +29,8 @@ type IrreversibleState struct {
 }
 
 func InitializeGameState(fen string) GameState {
-	board := BitboardBoard{}
-	moveGen := NewBitboardMoveGenerator(&board)
+	board := Board{}
+	moveGen := NewMoveGen(&board)
 
 	gs := GameState{
 		FullMove: 1,
@@ -264,7 +264,7 @@ func (gs *GameState) SetStateFromFENString(fenString string) {
 	if gs.Board != nil {
 		gs.Board.SetBoardFromFEN(pieces)
 	} else {
-		gs.Board = NewBitboardBoard(pieces)
+		gs.Board = NewBoard(pieces)
 	}
 
 	gs.ActiveSide = CharToColor(activeSide)
