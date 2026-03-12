@@ -142,3 +142,8 @@ func InitializeBitMasks() {
 	}
 	SquareMasks[NoSquare] = 0
 }
+
+func init() {
+	InitializeBitMasks()
+	InitializeMoveTables()
+}
