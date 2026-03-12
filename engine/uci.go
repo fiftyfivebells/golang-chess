@@ -54,13 +54,14 @@ func (u UCI) perftResponse(command string) {
 }
 
 func (u UCI) goResponse() {
-	moves := u.state.GetMovesForPosition()
+	legalMoves := u.state.GetPseudoLegalMovesForPosition()
+
+	if len(legalMoves) == 0 {
+		return
+	}
 
 	// TODO: implement real searching, instead of just choosing a random move from all possible moves
-	moveIndex := rand.Intn(len(moves))
-	bestMove := moves[moveIndex]
-
-	fmt.Printf("bestmove %s\n", bestMove)
+	fmt.Printf("bestmove %s\n", legalMoves[rand.Intn(len(legal))])
 }
 
 func (u UCI) Loop() {

@@ -54,16 +54,20 @@ func (gs *GameState) ClearGameState() {
 	gs.StatePly = 0
 }
 
-func (gs *GameState) GetMovesForPosition() []Move {
+func (gs *GameState) GetPseudoLegalMovesForPosition() []Move {
 	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
 	moves := gs.moveGen.GetMoves()
 
+	return moves
+}
+
+func (gs *GameState) GetLegalMovesForPosition() []Move {
+	pseudoLegalMoves := gs.GetPseudoLegalMovesForPosition()
 	legalMoves := gs.LegalMovesBuffer[:0]
-	for _, move := range moves {
+	for _, move := range pseudoLegalMoves {
 		if gs.ApplyMove(move) {
 			legalMoves = append(legalMoves, move)
 		}
-		gs.UnapplyMove(move)
 	}
 
 	return legalMoves

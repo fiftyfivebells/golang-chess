@@ -10,13 +10,12 @@ func Perft(state GameState, depth int) int64 {
 		return 1
 	}
 
-	moves := state.GetMovesForPosition()
+	pseudoMoves := state.GetPseudoLegalMovesForPosition()
+	n := copy(state.LegalMovesBuffer[:], pseudoMoves)
+	moves := state.LegalMovesBuffer[:n]
 	nodes := int64(0)
 
-	for i := 0; i < len(moves); i++ {
-
-		move := moves[i]
-
+	for _, move := range moves {
 		if state.ApplyMove(move) {
 			nodes += Perft(state, depth-1)
 		}
@@ -33,13 +32,12 @@ func PerftTrace(state GameState, depth int, trace []Move) int64 {
 		return 1
 	}
 
-	moves := state.GetMovesForPosition()
+	pseudoMoves := state.GetPseudoLegalMovesForPosition()
+	n := copy(state.LegalMovesBuffer[:], pseudoMoves)
+	moves := state.LegalMovesBuffer[:n]
 	nodes := int64(0)
 
-	for i := 0; i < len(moves); i++ {
-
-		move := moves[i]
-
+	for _, move := range moves {
 		if state.ApplyMove(move) {
 			trace = append(trace, move)
 			nodes += PerftTrace(state, depth-1, trace)
@@ -52,15 +50,15 @@ func PerftTrace(state GameState, depth int, trace []Move) int64 {
 }
 
 func PerftDivide(state GameState, depth int) int64 {
-	moves := state.GetMovesForPosition()
+	pseudoMoves := state.GetPseudoLegalMovesForPosition()
+	n := copy(state.LegalMovesBuffer[:], pseudoMoves)
+	moves := state.LegalMovesBuffer[:n]
 
 	var total int64 = 0
 	start := time.Now()
 
-	for i := 0; i < len(moves); i++ {
-		move := moves[i]
+	for _, move := range moves {
 		if state.ApplyMove(move) {
-
 			count := Perft(state, depth-1)
 			fmt.Printf("%s: %d\n", move.String(), count)
 			total += count
