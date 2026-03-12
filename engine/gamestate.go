@@ -57,7 +57,7 @@ func (gs *GameState) GetMovesForPosition() []Move {
 	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
 	moves := gs.moveGen.GetMoves()
 
-	var legalMoves []Move
+	legalMoves := make([]Move, 0, len(moves))
 	for _, move := range moves {
 		if gs.ApplyMove(move) {
 			legalMoves = append(legalMoves, move)
@@ -126,15 +126,6 @@ func (gs *GameState) ApplyMove(move Move) bool {
 	// The halfmove clock gets reset if the move was a capture or if the moved piece was a pawn
 	if IsAttackMove(moveType) || previous.Moved.PieceType == Pawn {
 		gs.HalfMove = 0
-	}
-
-	if previous.Moved.PieceType == Pawn && move.MoveType() == DoublePush {
-		pawnDirection := gs.getPawnDirection()
-		epSquare := Square(int(from) + pawnDirection)
-
-		if gs.Board.SquareIsUnderAttackByPawn(epSquare, gs.ActiveSide) {
-			gs.EPSquare = epSquare
-		}
 	}
 
 	gs.PreviousStates[gs.StatePly] = previous
