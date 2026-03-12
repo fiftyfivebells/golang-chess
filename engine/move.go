@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"slices"
 )
 
 // A move is a 32-bit unsigned integer, where groups of bits represent
@@ -56,9 +55,7 @@ func NewPromotionMove(from, to Square, pieceType, promotionPieceType PieceType, 
 }
 
 func IsAttackMove(moveType MoveType) bool {
-	attackMoves := []MoveType{Capture, EnPassant, CapturePromotion}
-
-	return slices.Contains(attackMoves, moveType)
+	return moveType == Capture || moveType == EnPassant || moveType == CapturePromotion
 }
 
 func IsPromotionMove(moveType MoveType) bool {

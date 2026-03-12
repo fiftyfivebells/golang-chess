@@ -60,53 +60,105 @@ func (bmg *MoveGen) generateMovesByPiece(pieceType PieceType, from Square, occup
 
 func (bmg *MoveGen) generatePawnMoves(activeSide Color, enPassant Square, occupied Bitboard) {
 	pawns := bmg.board.getPiecesByColorAndType(activeSide, Pawn)
+	empty := ^occupied
+	enemies := bmg.board.GetAllPiecesByColor(activeSide.EnemyColor())
+	epMask := SquareMasks[enPassant] // 0 when enPassant == NoSquare
+	captureTargets := enemies | epMask
 
-	for pawns != 0 {
-		from := pawns.PopLSB()
-		singleMove := PawnPushes[activeSide][from] & ^occupied
-		doubleMove := ((singleMove & Rank3) << North) & ^occupied
-		if activeSide == Black {
-			doubleMove = ((singleMove & Rank6) >> South) & ^occupied
+	if activeSide == White {
+		singles := (pawns << 8) & empty
+		doubles := ((singles & Rank3) << 8) & empty
+
+		for bb := singles & ^Rank8; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addMove(NewMove(Square(int(to)-8), to, Pawn, Quiet))
+		}
+		for bb := singles & Rank8; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addPromotionMoves(Square(int(to)-8), to, false)
+		}
+		for bb := doubles; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addMove(NewMove(Square(int(to)-16), to, Pawn, DoublePush))
 		}
 
-		for singleMove != 0 {
-			to := singleMove.PopLSB()
+		// Left = toward A-file (<<7), Right = toward H-file (<<9)
+		leftAttacks := (pawns << 7) & ^FileA & captureTargets
+		rightAttacks := (pawns << 9) & ^FileH & captureTargets
 
-			if isPromotion(to, activeSide) {
-				bmg.addPromotionMoves(from, to, false)
-				continue
-			}
-
-			move := NewMove(from, to, Pawn, Quiet)
-			bmg.addMove(move)
-		}
-
-		for doubleMove != 0 {
-			to := doubleMove.PopLSB()
-
-			move := NewMove(from, to, Pawn, DoublePush)
-			bmg.addMove(move)
-		}
-
-		targets := bmg.board.GetAllPiecesByColor(activeSide.EnemyColor()) | SquareMasks[enPassant]
-		pawnAttacks := PawnAttacks[activeSide][from] & targets
-
-		for pawnAttacks != 0 {
-			var move Move
-			to := pawnAttacks.PopLSB()
-
-			if isPromotion(to, activeSide) {
-				bmg.addPromotionMoves(from, to, true)
-				continue
-			}
-
+		for bb := leftAttacks & ^Rank8; bb != 0; {
+			to := bb.PopLSB()
+			from := Square(int(to) - 7)
 			if to == enPassant {
-				move = NewMove(from, to, Pawn, EnPassant)
+				bmg.addMove(NewMove(from, to, Pawn, EnPassant))
 			} else {
-				move = NewMove(from, to, Pawn, Capture)
+				bmg.addMove(NewMove(from, to, Pawn, Capture))
 			}
+		}
+		for bb := leftAttacks & Rank8; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addPromotionMoves(Square(int(to)-7), to, true)
+		}
+		for bb := rightAttacks & ^Rank8; bb != 0; {
+			to := bb.PopLSB()
+			from := Square(int(to) - 9)
+			if to == enPassant {
+				bmg.addMove(NewMove(from, to, Pawn, EnPassant))
+			} else {
+				bmg.addMove(NewMove(from, to, Pawn, Capture))
+			}
+		}
+		for bb := rightAttacks & Rank8; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addPromotionMoves(Square(int(to)-9), to, true)
+		}
 
-			bmg.addMove(move)
+	} else {
+		singles := (pawns >> 8) & empty
+		doubles := ((singles & Rank6) >> 8) & empty
+
+		for bb := singles & ^Rank1; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addMove(NewMove(Square(int(to)+8), to, Pawn, Quiet))
+		}
+		for bb := singles & Rank1; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addPromotionMoves(Square(int(to)+8), to, false)
+		}
+		for bb := doubles; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addMove(NewMove(Square(int(to)+16), to, Pawn, DoublePush))
+		}
+
+		// Left = toward H-file (>>7), Right = toward A-file (>>9)
+		leftAttacks := (pawns >> 7) & ^FileH & captureTargets
+		rightAttacks := (pawns >> 9) & ^FileA & captureTargets
+
+		for bb := leftAttacks & ^Rank1; bb != 0; {
+			to := bb.PopLSB()
+			from := Square(int(to) + 7)
+			if to == enPassant {
+				bmg.addMove(NewMove(from, to, Pawn, EnPassant))
+			} else {
+				bmg.addMove(NewMove(from, to, Pawn, Capture))
+			}
+		}
+		for bb := leftAttacks & Rank1; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addPromotionMoves(Square(int(to)+7), to, true)
+		}
+		for bb := rightAttacks & ^Rank1; bb != 0; {
+			to := bb.PopLSB()
+			from := Square(int(to) + 9)
+			if to == enPassant {
+				bmg.addMove(NewMove(from, to, Pawn, EnPassant))
+			} else {
+				bmg.addMove(NewMove(from, to, Pawn, Capture))
+			}
+		}
+		for bb := rightAttacks & Rank1; bb != 0; {
+			to := bb.PopLSB()
+			bmg.addPromotionMoves(Square(int(to)+9), to, true)
 		}
 	}
 }

@@ -216,21 +216,15 @@ func (b Board) generateSlidingMoves(square Square, occupied, allies, mask Bitboa
 }
 
 func (b Board) GetBishopMoves(sq Square, occupied, allies Bitboard) Bitboard {
-	diagonalMask := DiagonalMasks[sq]
-	antiDiagonalMask := AntiDiagonalMasks[sq]
-
-	diagonal := b.generateSlidingMoves(sq, occupied, allies, diagonalMask)
-	antiDiagonal := b.generateSlidingMoves(sq, occupied, allies, antiDiagonalMask)
+	diagonal := b.generateSlidingMoves(sq, occupied, allies, DiagonalMasks[sq])
+	antiDiagonal := b.generateSlidingMoves(sq, occupied, allies, AntiDiagonalMasks[sq])
 
 	return (diagonal | antiDiagonal) & ^allies
 }
 
 func (b Board) GetRookMoves(sq Square, occupied, allies Bitboard) Bitboard {
-	rank := RankMaskForSquare(sq)
-	file := FileMaskForSquare(sq)
-
-	horizontal := b.generateSlidingMoves(sq, occupied, allies, rank)
-	vertical := b.generateSlidingMoves(sq, occupied, allies, file)
+	horizontal := b.generateSlidingMoves(sq, occupied, allies, HorizontalMasks[sq])
+	vertical := b.generateSlidingMoves(sq, occupied, allies, VerticalMasks[sq])
 
 	return (horizontal | vertical) & ^allies
 }

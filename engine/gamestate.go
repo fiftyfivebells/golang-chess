@@ -14,8 +14,9 @@ type GameState struct {
 	HalfMove     uint16
 	FullMove     byte
 
-	StatePly       uint16
-	PreviousStates [100]IrreversibleState
+	LegalMovesBuffer [256]Move
+	StatePly         uint16
+	PreviousStates   [100]IrreversibleState
 
 	moveGen *MoveGen
 }
@@ -57,7 +58,7 @@ func (gs *GameState) GetMovesForPosition() []Move {
 	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
 	moves := gs.moveGen.GetMoves()
 
-	legalMoves := make([]Move, 0, len(moves))
+	legalMoves := gs.LegalMovesBuffer[:0]
 	for _, move := range moves {
 		if gs.ApplyMove(move) {
 			legalMoves = append(legalMoves, move)
