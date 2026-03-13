@@ -50,7 +50,11 @@ func (u UCI) perftResponse(command string) {
 		fmt.Printf("invalid depth: %s\n", args)
 		return
 	}
-	PerftDivide(u.state, depth)
+
+	perftState := PerftState{}
+	perftState.gameState = &u.state
+
+	PerftDivide(&perftState, depth)
 }
 
 func (u UCI) goResponse() {
@@ -61,7 +65,7 @@ func (u UCI) goResponse() {
 	}
 
 	// TODO: implement real searching, instead of just choosing a random move from all possible moves
-	fmt.Printf("bestmove %s\n", legalMoves[rand.Intn(len(legal))])
+	fmt.Printf("bestmove %s\n", legalMoves[rand.Intn(len(legalMoves))])
 }
 
 func (u UCI) Loop() {

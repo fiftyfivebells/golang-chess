@@ -5,22 +5,34 @@ import (
 	"time"
 )
 
-func Perft(state GameState, depth int) int64 {
+const MaxPerftDepth = 10
+
+type PerftState struct {
+	gameState   *GameState
+	moveBuffers [MaxPerftDepth][256]Move
+	moveCounts  [MaxPerftDepth]int
+}
+
+func Perft(ps *PerftState, depth int) int64 {
 	if depth == 0 {
 		return 1
 	}
 
-	pseudoMoves := state.GetPseudoLegalMovesForPosition()
-	n := copy(state.LegalMovesBuffer[:], pseudoMoves)
-	moves := state.LegalMovesBuffer[:n]
-	nodes := int64(0)
+	mover := ps.gameState.ActiveSide
 
-	for _, move := range moves {
-		if state.ApplyMove(move) {
-			nodes += Perft(state, depth-1)
+	ps.gameState.moveGen.GenerateMoves(mover, ps.gameState.EPSquare, ps.gameState.CastleRights)
+	pseudoLegalMoves := ps.gameState.moveGen.GetMoves()
+
+	buffer := ps.moveBuffers[depth][:len(pseudoLegalMoves)]
+	copy(buffer, pseudoLegalMoves)
+
+	nodes := int64(0)
+	for _, move := range buffer {
+		if ps.gameState.ApplyMove(move) {
+			nodes += Perft(ps, depth-1)
 		}
 
-		state.UnapplyMove(move)
+		ps.gameState.UnapplyMove(move)
 	}
 
 	return nodes
@@ -49,22 +61,49 @@ func PerftTrace(state GameState, depth int, trace []Move) int64 {
 	return nodes
 }
 
-func PerftDivide(state GameState, depth int) int64 {
-	pseudoMoves := state.GetPseudoLegalMovesForPosition()
-	n := copy(state.LegalMovesBuffer[:], pseudoMoves)
-	moves := state.LegalMovesBuffer[:n]
+// if depth == 0 {
+// 	return 1
+// }
+
+// mover := ps.gameState.ActiveSide
+
+// ps.gameState.moveGen.GenerateMoves(mover, ps.gameState.EPSquare, ps.gameState.CastleRights)
+// pseudoLegalMoves := ps.gameState.moveGen.GetMoves()
+
+// buffer := ps.moveBuffers[depth][:len(pseudoLegalMoves)]
+// copy(buffer, pseudoLegalMoves)
+
+// nodes := int64(0)
+// for _, move := range buffer {
+// 	if ps.gameState.ApplyMove(move) {
+// 		nodes += Perft(ps, depth-1)
+// 	}
+
+// 	ps.gameState.UnapplyMove(move)
+// }
+
+// return nodes
+
+func PerftDivide(ps *PerftState, depth int) int64 {
+	mover := ps.gameState.ActiveSide
+
+	ps.gameState.moveGen.GenerateMoves(mover, ps.gameState.EPSquare, ps.gameState.CastleRights)
+	pseudoLegalMoves := ps.gameState.moveGen.GetMoves()
+
+	buffer := ps.moveBuffers[depth][:len(pseudoLegalMoves)]
+	copy(buffer, pseudoLegalMoves)
 
 	var total int64 = 0
 	start := time.Now()
 
-	for _, move := range moves {
-		if state.ApplyMove(move) {
-			count := Perft(state, depth-1)
+	for _, move := range buffer {
+		if ps.gameState.ApplyMove(move) {
+			count := Perft(ps, depth-1)
 			fmt.Printf("%s: %d\n", move.String(), count)
 			total += count
 		}
 
-		state.UnapplyMove(move)
+		ps.gameState.UnapplyMove(move)
 	}
 
 	elapsed := time.Since(start)
