@@ -181,27 +181,27 @@ func (b *Board) ReverseCastleMove(kingFrom, kingTo Square) {
 
 func (b Board) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 	enemy := activeSide.EnemyColor()
+	occ := b.occupancy
 
-	if (PawnAttacks[activeSide][sq] & b.pieces[enemy][Pawn]) != 0 {
+	if PawnAttacks[activeSide][sq]&b.pieces[enemy][Pawn] != 0 {
 		return true
 	}
-	if (KnightMoves[sq] & b.pieces[enemy][Knight]) != 0 {
+	if KnightMoves[sq]&b.pieces[enemy][Knight] != 0 {
 		return true
 	}
-	if (KingMoves[sq] & b.pieces[enemy][King]) != 0 {
-		return true
-	}
-
-	allies := b.GetAllPiecesByColor(activeSide)
-	occupied := b.getAllPieces()
-
-	bishopMoves := b.GetBishopMoves(sq, occupied, allies)
-	if (bishopMoves & (b.pieces[enemy][Bishop] | b.pieces[enemy][Queen])) != 0 {
+	if KingMoves[sq]&b.pieces[enemy][King] != 0 {
 		return true
 	}
 
-	rookMoves := b.GetRookMoves(sq, occupied, allies)
-	return (rookMoves & (b.pieces[enemy][Rook] | b.pieces[enemy][Queen])) != 0
+	be := &BishopMagics[sq]
+	diagAttacks := BishopAttacks[sq][((occ&be.mask)*Bitboard(be.magic))>>be.shift]
+	if diagAttacks&(b.pieces[enemy][Bishop]|b.pieces[enemy][Queen]) != 0 {
+		return true
+	}
+
+	re := &RookMagics[sq]
+	orthoAttacks := RookAttacks[sq][((occ&re.mask)*Bitboard(re.magic))>>re.shift]
+	return orthoAttacks&(b.pieces[enemy][Rook]|b.pieces[enemy][Queen]) != 0
 }
 
 func (b Board) KingIsUnderAttack(color Color) bool {
