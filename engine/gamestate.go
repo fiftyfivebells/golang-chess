@@ -122,24 +122,100 @@ func (gs *GameState) ApplyMove(move Move) bool {
 
 	case CapturePromotion:
 		previous.Destination = gs.Board.squares[to]
-		promotionPiece := makePiece(move.PromotionPieceType(), gs.ActiveSide)
-		gs.Board.MovePiece(promotionPiece, from, to)
+		captured := previous.Destination
+		promoPiece := makePiece(move.PromotionPieceType(), color)
+		fromBB := SquareMasks[from]
+		toBB := SquareMasks[to]
+
+		// Remove captured piece from to
+		gs.Board.pieces[captured.Color()][captured.Type()] &^= toBB
+		gs.Board.colorBB[captured.Color()] &^= toBB
+
+		// Remove pawn from from
+		gs.Board.pieces[color][Pawn] &^= fromBB
+
+		// Place promotion piece at to
+		gs.Board.pieces[color][promoPiece.Type()] |= toBB
+
+		// Color: from cleared, to already had enemy color cleared above, now set ours
+		gs.Board.colorBB[color] ^= fromBB | toBB
+
+		// Occupancy: from cleared (pawn left), to stays occupied (captured removed, promo placed)
+		gs.Board.occupancy &^= fromBB
+
+		gs.Board.squares[from] = NoPiece
+		gs.Board.squares[to] = promoPiece
 
 	case Promotion:
-		promotionPiece := makePiece(move.PromotionPieceType(), gs.ActiveSide)
-		gs.Board.MovePiece(promotionPiece, from, to)
+		promoPiece := makePiece(move.PromotionPieceType(), color)
+		fromBB := SquareMasks[from]
+		toBB := SquareMasks[to]
+
+		// Remove pawn from from
+		gs.Board.pieces[color][Pawn] &^= fromBB
+
+		// Place promotion piece at to
+		gs.Board.pieces[color][promoPiece.Type()] |= toBB
+
+		// pawn leaves from, promo arrives at to
+		gs.Board.colorBB[color] ^= fromBB | toBB
+
+		// clear from, set to
+		gs.Board.occupancy ^= fromBB | toBB
+
+		gs.Board.squares[from] = NoPiece
+		gs.Board.squares[to] = promoPiece
 
 	case CastleKingside, CastleQueenside:
-		gs.Board.CastleMove(from, to)
+		rookFrom, rookTo := CastlingRookPositions(from, to)
+
+		kingMask := SquareMasks[from] | SquareMasks[to]
+		rookMask := SquareMasks[rookFrom] | SquareMasks[rookTo]
+
+		// Move king
+		gs.Board.pieces[color][King] ^= kingMask
+		// Move rook
+		gs.Board.pieces[color][Rook] ^= rookMask
+
+		gs.Board.colorBB[color] ^= kingMask | rookMask
+		gs.Board.occupancy ^= kingMask | rookMask
+
+		// Squares array
+		rook := makePiece(Rook, color)
+		gs.Board.squares[to] = movingPiece   // king destination
+		gs.Board.squares[from] = NoPiece     // king origin
+		gs.Board.squares[rookTo] = rook      // rook destination
+		gs.Board.squares[rookFrom] = NoPiece // rook origin
+
+		gs.Board.kingSq[color] = to
 
 	case EnPassant:
-		pawnDirection := pawnDirection[gs.ActiveSide]
+		dir := pawnDirection[gs.ActiveSide]
+		capturedSq := Square(int(to) - dir)
 
-		capturedPawn := Square(int(to) - pawnDirection)
-		previous.Destination = gs.Board.squares[capturedPawn]
+		// save the captured pawn before it gets removed
+		previous.Destination = gs.Board.squares[capturedSq]
 
-		gs.Board.MovePiece(movingPiece, from, to)
-		gs.Board.RemovePieceFromSquare(capturedPawn)
+		moveMask := SquareMasks[from] | SquareMasks[to]
+		capMask := SquareMasks[capturedSq]
+		enemyColor := gs.ActiveSide.EnemyColor()
+
+		// move the pawn
+		gs.Board.pieces[color][Pawn] ^= moveMask
+		gs.Board.colorBB[color] ^= moveMask
+
+		// remove the captured pawn
+		gs.Board.pieces[enemyColor][Pawn] &^= capMask
+		gs.Board.colorBB[enemyColor] &^= capMask
+
+		// from is cleared, to is set, capturedSq is cleared
+		gs.Board.occupancy ^= moveMask
+		gs.Board.occupancy &^= capMask
+
+		gs.Board.squares[to] = movingPiece
+		gs.Board.squares[from] = NoPiece
+		gs.Board.squares[capturedSq] = NoPiece
+
 	}
 
 	// Update castle rights
@@ -186,11 +262,12 @@ func (gs *GameState) UnapplyMove(move Move) {
 	pt := move.PieceType()
 
 	movingPiece := makePiece(pt, color)
-
 	capturedPiece := previous.Destination
+	capturedColor := capturedPiece.Color()
 
 	switch moveType {
-	case Quiet:
+	case Quiet, DoublePush:
+		// Identical undo: move piece from to back to from
 		mask := SquareMasks[from] | SquareMasks[to]
 		gs.Board.pieces[color][pt] ^= mask
 		gs.Board.colorBB[color] ^= mask
@@ -204,42 +281,108 @@ func (gs *GameState) UnapplyMove(move Move) {
 	case Capture:
 		fromBB := SquareMasks[from]
 		toBB := SquareMasks[to]
-		// Move piece back
+
+		// Move our piece back: to → from
 		gs.Board.pieces[color][pt] ^= fromBB | toBB
 		gs.Board.colorBB[color] ^= fromBB | toBB
-		gs.Board.occupancy ^= fromBB // from now occupied, to stays occupied
+		gs.Board.occupancy ^= fromBB // from was empty, now occupied; to stays occupied
+
+		// Restore captured piece at to
+		gs.Board.pieces[capturedColor][capturedPiece.Type()] |= toBB
+		gs.Board.colorBB[capturedColor] |= toBB
+
 		gs.Board.squares[from] = movingPiece
-		// Restore captured piece
-		gs.Board.pieces[capturedPiece.Color()][capturedPiece.Type()] |= toBB
-		gs.Board.colorBB[capturedPiece.Color()] |= toBB
 		gs.Board.squares[to] = capturedPiece
 		if pt == King {
 			gs.Board.kingSq[color] = from
 		}
 
-	case DoublePush:
-		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(movingPiece, from)
-
 	case EnPassant:
-		direction := pawnDirection[gs.ActiveSide]
-		capturedSquare := Square(int(to) - direction)
+		dir := pawnDirection[gs.ActiveSide]
+		capturedSq := Square(int(to) - dir)
 
-		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(movingPiece, from)
-		gs.Board.SetPieceAtPosition(previous.Destination, capturedSquare)
+		moveMask := SquareMasks[from] | SquareMasks[to]
+		capMask := SquareMasks[capturedSq]
+		enemyColor := gs.ActiveSide.EnemyColor()
+
+		// Move our pawn back: to → from
+		gs.Board.pieces[color][Pawn] ^= moveMask
+		gs.Board.colorBB[color] ^= moveMask
+		gs.Board.occupancy ^= moveMask // toggles from (on) and to (off)
+
+		// Restore captured pawn at capturedSq
+		gs.Board.pieces[enemyColor][Pawn] |= capMask
+		gs.Board.colorBB[enemyColor] |= capMask
+		gs.Board.occupancy |= capMask
+
+		gs.Board.squares[from] = movingPiece
+		gs.Board.squares[to] = NoPiece
+		gs.Board.squares[capturedSq] = capturedPiece
 
 	case Promotion:
-		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(movingPiece, from)
+		promoPieceType := move.PromotionPieceType()
+		fromBB := SquareMasks[from]
+		toBB := SquareMasks[to]
+
+		// Remove promotion piece from to
+		gs.Board.pieces[color][promoPieceType] &^= toBB
+
+		// Restore pawn at from
+		gs.Board.pieces[color][Pawn] |= fromBB
+
+		// Color: to cleared, from set
+		gs.Board.colorBB[color] ^= fromBB | toBB
+
+		// Occupancy: to cleared, from set
+		gs.Board.occupancy ^= fromBB | toBB
+
+		gs.Board.squares[from] = movingPiece
+		gs.Board.squares[to] = NoPiece
 
 	case CapturePromotion:
-		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(capturedPiece, to)
-		gs.Board.SetPieceAtPosition(movingPiece, from)
+		promoPieceType := move.PromotionPieceType()
+		fromBB := SquareMasks[from]
+		toBB := SquareMasks[to]
+
+		// Remove promotion piece from to
+		gs.Board.pieces[color][promoPieceType] &^= toBB
+		gs.Board.colorBB[color] &^= toBB
+
+		// Restore pawn at from
+		gs.Board.pieces[color][Pawn] |= fromBB
+		gs.Board.colorBB[color] |= fromBB
+
+		// Restore captured piece at to
+		gs.Board.pieces[capturedColor][capturedPiece.Type()] |= toBB
+		gs.Board.colorBB[capturedColor] |= toBB
+
+		// Occupancy: from becomes occupied, to stays occupied
+		gs.Board.occupancy |= fromBB
+
+		gs.Board.squares[from] = movingPiece
+		gs.Board.squares[to] = capturedPiece
 
 	case CastleKingside, CastleQueenside:
-		gs.Board.ReverseCastleMove(from, to)
+		rookFrom, rookTo := CastlingRookPositions(from, to)
+
+		kingMask := SquareMasks[from] | SquareMasks[to]
+		rookMask := SquareMasks[rookFrom] | SquareMasks[rookTo]
+
+		// Move king back: to → from
+		gs.Board.pieces[color][King] ^= kingMask
+		// Move rook back: rookTo → rookFrom
+		gs.Board.pieces[color][Rook] ^= rookMask
+
+		gs.Board.colorBB[color] ^= kingMask | rookMask
+		gs.Board.occupancy ^= kingMask | rookMask
+
+		rook := makePiece(Rook, color)
+		gs.Board.squares[from] = movingPiece // king back to origin
+		gs.Board.squares[to] = NoPiece       // king's destination cleared
+		gs.Board.squares[rookFrom] = rook    // rook back to origin
+		gs.Board.squares[rookTo] = NoPiece   // rook's destination cleared
+
+		gs.Board.kingSq[color] = from
 	}
 }
 
