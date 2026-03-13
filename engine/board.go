@@ -183,14 +183,12 @@ func (b Board) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 		return true
 	}
 
-	be := &BishopMagics[sq]
-	diagAttacks := BishopAttacks[sq][((occ&be.mask)*Bitboard(be.magic))>>be.shift]
+	diagAttacks := GetBishopAttacks(sq, occ)
 	if diagAttacks&(b.pieces[enemy][Bishop]|b.pieces[enemy][Queen]) != 0 {
 		return true
 	}
 
-	re := &RookMagics[sq]
-	orthoAttacks := RookAttacks[sq][((occ&re.mask)*Bitboard(re.magic))>>re.shift]
+	orthoAttacks := GetRookAttacks(sq, occ)
 	return orthoAttacks&(b.pieces[enemy][Rook]|b.pieces[enemy][Queen]) != 0
 }
 
@@ -215,16 +213,24 @@ func (b Board) generateSlidingMoves(square Square, occupied, allies, mask Bitboa
 	return (bottom ^ top) & mask & ^allies
 }
 
-func (b Board) GetBishopMoves(sq Square, occupied, allies Bitboard) Bitboard {
+func GetBishopAttacks(sq Square, occupied Bitboard) Bitboard {
 	e := &BishopMagics[sq]
-	idx := (occupied & e.mask) * Bitboard(e.magic) >> e.shift
-	return BishopAttacks[sq][idx] & ^allies
+	idx := uint32((occupied & e.mask) * Bitboard(e.magic) >> e.shift)
+	return bishopTable[e.offset+idx]
+}
+
+func (b Board) GetBishopMoves(sq Square, occupied, allies Bitboard) Bitboard {
+	return GetBishopAttacks(sq, occupied) & ^allies
+}
+
+func GetRookAttacks(sq Square, occupied Bitboard) Bitboard {
+	e := &RookMagics[sq]
+	idx := uint32((occupied & e.mask) * Bitboard(e.magic) >> e.shift)
+	return rookTable[e.offset+idx]
 }
 
 func (b Board) GetRookMoves(sq Square, occupied, allies Bitboard) Bitboard {
-	e := &RookMagics[sq]
-	idx := (occupied & e.mask) * Bitboard(e.magic) >> e.shift
-	return RookAttacks[sq][idx] & ^allies
+	return GetRookAttacks(sq, occupied) & ^allies
 }
 
 func (b Board) getAllPieces() Bitboard {
