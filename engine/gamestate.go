@@ -25,7 +25,6 @@ type IrreversibleState struct {
 	CastleRights CastleAvailability
 	EPSquare     Square
 	HalfMove     uint16
-	Moved        Piece
 	Destination  Piece
 }
 
@@ -87,8 +86,7 @@ func (gs *GameState) ApplyMove(move Move) bool {
 		CastleRights: gs.CastleRights,
 		EPSquare:     gs.EPSquare,
 		HalfMove:     gs.HalfMove,
-		Moved:        movingPiece,
-		Destination:  gs.Board.GetPieceAtSquare(to),
+		Destination:  NoPiece,
 	}
 
 	gs.HalfMove++
@@ -107,6 +105,7 @@ func (gs *GameState) ApplyMove(move Move) bool {
 		}
 
 	case Capture:
+		previous.Destination = gs.Board.squares[to]
 		captured := previous.Destination
 		fromBB := SquareMasks[from]
 		toBB := SquareMasks[to]
@@ -122,10 +121,23 @@ func (gs *GameState) ApplyMove(move Move) bool {
 		}
 
 	case DoublePush:
-		gs.Board.MovePiece(movingPiece, from, to)
+		mask := SquareMasks[from] | SquareMasks[to]
+		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= mask
+		gs.Board.colorBB[movingPiece.Color] ^= mask
+		gs.Board.occupancy ^= mask
+		gs.Board.squares[to] = movingPiece
+		gs.Board.squares[from] = NoPiece
 		gs.EPSquare = Square(int(from) + pawnDirection[gs.ActiveSide])
 
-	case Promotion, CapturePromotion:
+	case CapturePromotion:
+		previous.Destination = gs.Board.squares[to]
+		promotionPiece := Piece{
+			Color:     gs.ActiveSide,
+			PieceType: move.PromotionPieceType(),
+		}
+		gs.Board.MovePiece(promotionPiece, from, to)
+
+	case Promotion:
 		promotionPiece := Piece{
 			Color:     gs.ActiveSide,
 			PieceType: move.PromotionPieceType(),
@@ -137,7 +149,7 @@ func (gs *GameState) ApplyMove(move Move) bool {
 		pawnDirection := pawnDirection[gs.ActiveSide]
 
 		capturedPawn := Square(int(to) - pawnDirection)
-		previous.Destination = gs.Board.GetPieceAtSquare(capturedPawn)
+		previous.Destination = gs.Board.squares[capturedPawn]
 
 		gs.Board.MovePiece(movingPiece, from, to)
 		gs.Board.RemovePieceFromSquare(capturedPawn)
@@ -149,7 +161,7 @@ func (gs *GameState) ApplyMove(move Move) bool {
 	}
 
 	// The halfmove clock gets reset if the move was a capture or if the moved piece was a pawn
-	if IsAttackMove(moveType) || previous.Moved.PieceType == Pawn {
+	if IsAttackMove(moveType) || movingPiece.PieceType == Pawn {
 		gs.HalfMove = 0
 	}
 
@@ -183,7 +195,10 @@ func (gs *GameState) UnapplyMove(move Move) {
 	to := move.ToSquare()
 	moveType := move.MoveType()
 
-	movingPiece := previous.Moved
+	movingPiece := Piece{
+		Color:     gs.ActiveSide,
+		PieceType: move.PieceType(),
+	}
 	capturedPiece := previous.Destination
 
 	// set the moved piece back where it came from
