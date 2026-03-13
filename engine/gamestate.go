@@ -54,10 +54,10 @@ func (gs *GameState) ClearGameState() {
 }
 
 func (gs *GameState) GetPseudoLegalMovesForPosition() []Move {
-	gs.moveGen.GenerateMoves(gs.ActiveSide, gs.EPSquare, gs.CastleRights)
-	moves := gs.moveGen.GetMoves()
 
-	return moves
+	count := gs.moveGen.GenerateMoves(&gs.LegalMovesBuffer, gs.ActiveSide, gs.EPSquare, gs.CastleRights)
+
+	return gs.LegalMovesBuffer[:count]
 }
 
 func (gs *GameState) GetLegalMovesForPosition() []Move {

@@ -18,21 +18,18 @@ func Perft(ps *PerftState, depth int) int64 {
 		return 1
 	}
 
-	mover := ps.gameState.ActiveSide
-
-	ps.gameState.moveGen.GenerateMoves(mover, ps.gameState.EPSquare, ps.gameState.CastleRights)
-	pseudoLegalMoves := ps.gameState.moveGen.GetMoves()
-
-	buffer := ps.moveBuffers[depth][:len(pseudoLegalMoves)]
-	copy(buffer, pseudoLegalMoves)
+	gameState := ps.gameState
+	count := gameState.moveGen.GenerateMoves(&ps.moveBuffers[depth], gameState.ActiveSide, gameState.EPSquare, gameState.CastleRights)
 
 	nodes := int64(0)
-	for _, move := range buffer {
-		if ps.gameState.ApplyMove(move) {
+	buffer := ps.moveBuffers[depth]
+	for i := range count {
+		move := buffer[i]
+		if gameState.ApplyMove(move) {
 			nodes += Perft(ps, depth-1)
 		}
 
-		ps.gameState.UnapplyMove(move)
+		gameState.UnapplyMove(move)
 	}
 
 	return nodes
@@ -61,42 +58,16 @@ func PerftTrace(state GameState, depth int, trace []Move) int64 {
 	return nodes
 }
 
-// if depth == 0 {
-// 	return 1
-// }
-
-// mover := ps.gameState.ActiveSide
-
-// ps.gameState.moveGen.GenerateMoves(mover, ps.gameState.EPSquare, ps.gameState.CastleRights)
-// pseudoLegalMoves := ps.gameState.moveGen.GetMoves()
-
-// buffer := ps.moveBuffers[depth][:len(pseudoLegalMoves)]
-// copy(buffer, pseudoLegalMoves)
-
-// nodes := int64(0)
-// for _, move := range buffer {
-// 	if ps.gameState.ApplyMove(move) {
-// 		nodes += Perft(ps, depth-1)
-// 	}
-
-// 	ps.gameState.UnapplyMove(move)
-// }
-
-// return nodes
-
 func PerftDivide(ps *PerftState, depth int) int64 {
-	mover := ps.gameState.ActiveSide
 
-	ps.gameState.moveGen.GenerateMoves(mover, ps.gameState.EPSquare, ps.gameState.CastleRights)
-	pseudoLegalMoves := ps.gameState.moveGen.GetMoves()
-
-	buffer := ps.moveBuffers[depth][:len(pseudoLegalMoves)]
-	copy(buffer, pseudoLegalMoves)
-
+	gameState := ps.gameState
+	count := gameState.moveGen.GenerateMoves(&ps.moveBuffers[depth], gameState.ActiveSide, gameState.EPSquare, gameState.CastleRights)
+	buffer := ps.moveBuffers[depth]
 	var total int64 = 0
 	start := time.Now()
 
-	for _, move := range buffer {
+	for i := range count {
+		move := buffer[i]
 		if ps.gameState.ApplyMove(move) {
 			count := Perft(ps, depth-1)
 			fmt.Printf("%s: %d\n", move.String(), count)
