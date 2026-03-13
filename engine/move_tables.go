@@ -45,6 +45,7 @@ func InitializeMoveTables() {
 		DiagonalMasks[square] = createDiagonalMask(square)
 		AntiDiagonalMasks[square] = createAntiDiagonalMask(square)
 	}
+	InitMagics()
 }
 
 func createWhitePawnAttacksForSquare(square Square) Bitboard {

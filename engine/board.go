@@ -216,17 +216,15 @@ func (b Board) generateSlidingMoves(square Square, occupied, allies, mask Bitboa
 }
 
 func (b Board) GetBishopMoves(sq Square, occupied, allies Bitboard) Bitboard {
-	diagonal := b.generateSlidingMoves(sq, occupied, allies, DiagonalMasks[sq])
-	antiDiagonal := b.generateSlidingMoves(sq, occupied, allies, AntiDiagonalMasks[sq])
-
-	return (diagonal | antiDiagonal) & ^allies
+	e := &BishopMagics[sq]
+	idx := (occupied & e.mask) * Bitboard(e.magic) >> e.shift
+	return BishopAttacks[sq][idx] & ^allies
 }
 
 func (b Board) GetRookMoves(sq Square, occupied, allies Bitboard) Bitboard {
-	horizontal := b.generateSlidingMoves(sq, occupied, allies, HorizontalMasks[sq])
-	vertical := b.generateSlidingMoves(sq, occupied, allies, VerticalMasks[sq])
-
-	return (horizontal | vertical) & ^allies
+	e := &RookMagics[sq]
+	idx := (occupied & e.mask) * Bitboard(e.magic) >> e.shift
+	return RookAttacks[sq][idx] & ^allies
 }
 
 func (b Board) getAllPieces() Bitboard {

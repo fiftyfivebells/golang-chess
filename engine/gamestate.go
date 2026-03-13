@@ -99,7 +99,7 @@ func (gs *GameState) ApplyMove(move Move) bool {
 		gs.Board.MovePiece(movingPiece, from, to)
 	case DoublePush:
 		gs.Board.MovePiece(movingPiece, from, to)
-		pawnDirection := gs.getPawnDirection()
+		pawnDirection := pawnDirection[gs.ActiveSide]
 		epSquare := Square(int(from) + pawnDirection)
 
 		if gs.Board.SquareIsUnderAttackByPawn(epSquare, gs.ActiveSide) {
@@ -114,7 +114,7 @@ func (gs *GameState) ApplyMove(move Move) bool {
 	case CastleKingside, CastleQueenside:
 		gs.Board.CastleMove(from, to)
 	case EnPassant:
-		pawnDirection := gs.getPawnDirection()
+		pawnDirection := pawnDirection[gs.ActiveSide]
 
 		capturedPawn := Square(int(to) - pawnDirection)
 		previous.Destination = gs.Board.GetPieceAtSquare(capturedPawn)
@@ -178,7 +178,7 @@ func (gs *GameState) UnapplyMove(move Move) {
 		gs.Board.SetPieceAtPosition(capturedPiece, to)
 
 	case EnPassant:
-		direction := gs.getPawnDirection()
+		direction := pawnDirection[gs.ActiveSide]
 		capturedSquare := Square(int(to) - direction)
 
 		gs.Board.RemovePieceFromSquare(to)
@@ -319,11 +319,4 @@ func (gs GameState) String() string {
 	return gameStateString
 }
 
-func (gs GameState) getPawnDirection() int {
-	pawnDirection := North
-	if gs.ActiveSide == Black {
-		pawnDirection = -North // north and south are both 8, so we'll just negate north to get -8
-	}
-
-	return pawnDirection
-}
+var pawnDirection = [2]int{8, -8}
