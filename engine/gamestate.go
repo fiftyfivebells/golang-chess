@@ -74,37 +74,57 @@ func (gs *GameState) GetLegalMovesForPosition() []Move {
 }
 
 func (gs *GameState) ApplyMove(move Move) bool {
-	previous := IrreversibleState{
-		CastleRights: gs.CastleRights,
-		EPSquare:     gs.EPSquare,
-		HalfMove:     gs.HalfMove,
-		Moved:        gs.Board.GetPieceAtSquare(move.FromSquare()),
-		Destination:  gs.Board.GetPieceAtSquare(move.ToSquare()),
-	}
-
-	gs.HalfMove++
-	gs.EPSquare = NoSquare
+	moveType := move.MoveType()
+	from := move.FromSquare()
+	to := move.ToSquare()
 
 	movingPiece := Piece{
 		Color:     gs.ActiveSide,
 		PieceType: move.PieceType(),
 	}
 
-	moveType := move.MoveType()
-	from := move.FromSquare()
-	to := move.ToSquare()
+	previous := IrreversibleState{
+		CastleRights: gs.CastleRights,
+		EPSquare:     gs.EPSquare,
+		HalfMove:     gs.HalfMove,
+		Moved:        movingPiece,
+		Destination:  gs.Board.GetPieceAtSquare(to),
+	}
+
+	gs.HalfMove++
+	gs.EPSquare = NoSquare
 
 	switch moveType {
-	case Quiet, Capture:
-		gs.Board.MovePiece(movingPiece, from, to)
+	case Quiet:
+		mask := SquareMasks[from] | SquareMasks[to]
+		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= mask
+		gs.Board.colorBB[movingPiece.Color] ^= mask
+		gs.Board.occupancy ^= mask
+		gs.Board.squares[to] = movingPiece
+		gs.Board.squares[from] = NoPiece
+		if movingPiece.PieceType == King {
+			gs.Board.kingSq[movingPiece.Color] = to
+		}
+
+	case Capture:
+		captured := previous.Destination
+		fromBB := SquareMasks[from]
+		toBB := SquareMasks[to]
+		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= fromBB | toBB
+		gs.Board.colorBB[movingPiece.Color] ^= fromBB | toBB
+		gs.Board.pieces[captured.Color][captured.PieceType] &^= toBB
+		gs.Board.colorBB[captured.Color] &^= toBB
+		gs.Board.occupancy &^= fromBB // to stays occupied, now has moving piece
+		gs.Board.squares[to] = movingPiece
+		gs.Board.squares[from] = NoPiece
+		if movingPiece.PieceType == King {
+			gs.Board.kingSq[movingPiece.Color] = to
+		}
+
 	case DoublePush:
 		gs.Board.MovePiece(movingPiece, from, to)
-		pawnDirection := pawnDirection[gs.ActiveSide]
-		epSquare := Square(int(from) + pawnDirection)
+		gs.EPSquare = Square(int(from) + pawnDirection[gs.ActiveSide])
 
-		if gs.Board.SquareIsUnderAttackByPawn(epSquare, gs.ActiveSide) {
-			gs.EPSquare = epSquare
-		}
 	case Promotion, CapturePromotion:
 		promotionPiece := Piece{
 			Color:     gs.ActiveSide,
@@ -170,12 +190,15 @@ func (gs *GameState) UnapplyMove(move Move) {
 	gs.Board.SetPieceAtPosition(movingPiece, from)
 
 	switch moveType {
-	case Quiet, DoublePush:
+	case Quiet:
 		gs.Board.RemovePieceFromSquare(to)
 
 	case Capture:
 		gs.Board.RemovePieceFromSquare(to)
 		gs.Board.SetPieceAtPosition(capturedPiece, to)
+
+	case DoublePush:
+		gs.Board.RemovePieceFromSquare(to)
 
 	case EnPassant:
 		direction := pawnDirection[gs.ActiveSide]

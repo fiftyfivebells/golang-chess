@@ -11,6 +11,7 @@ type Board struct {
 	squares   [64]Piece
 	colorBB   [2]Bitboard
 	occupancy Bitboard
+	kingSq    [2]Square
 }
 
 func NewBoard(fen string) *Board {
@@ -35,6 +36,9 @@ func (b *Board) SetBoardFromFEN(fen string) {
 			square -= Square(char - '0')
 		}
 	}
+
+	b.kingSq[White] = b.pieces[White][King].lsb()
+	b.kingSq[Black] = b.pieces[Black][King].lsb()
 }
 
 func (b *Board) ClearBoard() {
@@ -90,9 +94,16 @@ func (b *Board) SetPieceAtPosition(p Piece, square Square) {
 		return
 	}
 
-	b.pieces[p.Color][p.PieceType].setBitAtSquare(square)
-	b.colorBB[p.Color].setBitAtSquare(square)
+	color := p.Color
+	pieceType := p.PieceType
+
+	b.pieces[color][pieceType].setBitAtSquare(square)
+	b.colorBB[color].setBitAtSquare(square)
 	b.occupancy.setBitAtSquare(square)
+
+	if pieceType == King {
+		b.kingSq[color] = square
+	}
 }
 
 func (b Board) GetPieceAtSquare(sq Square) Piece {
@@ -194,8 +205,7 @@ func (b Board) SquareIsUnderAttack(sq Square, activeSide Color) bool {
 }
 
 func (b Board) KingIsUnderAttack(color Color) bool {
-	kingIndex := b.pieces[color][King].lsb()
-	return b.SquareIsUnderAttack(kingIndex, color)
+	return b.SquareIsUnderAttack(b.kingSq[color], color)
 }
 
 func (b Board) SquareIsUnderAttackByPawn(sq Square, activeSide Color) bool {
