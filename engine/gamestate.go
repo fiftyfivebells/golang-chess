@@ -257,9 +257,9 @@ func (gs *GameState) UpdateRookRights(color Color, square Square) {
 	kingside, queenside := rookSquares(color)
 
 	if square == kingside {
-		gs.CastleRights.Remove(color, "kingside")
+		gs.CastleRights.Remove(color, Kingside)
 	} else if square == queenside {
-		gs.CastleRights.Remove(color, "queenside")
+		gs.CastleRights.Remove(color, Queenside)
 	}
 }
 

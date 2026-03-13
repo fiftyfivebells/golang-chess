@@ -139,6 +139,18 @@ const (
 	QueensideBlackCastle CastleAvailability = 0b1000
 )
 
+type CastleSide byte
+
+const (
+	Kingside  CastleSide = 0
+	Queenside CastleSide = 1
+)
+
+var castleMask = [2][2]CastleAvailability{
+	{KingsideWhiteCastle, QueensideWhiteCastle},
+	{KingsideBlackCastle, QueensideBlackCastle},
+}
+
 func (ca *CastleAvailability) RemoveAllRights(color Color) {
 	if color == White {
 		*ca &= ^(KingsideWhiteCastle | QueensideWhiteCastle)
@@ -147,20 +159,8 @@ func (ca *CastleAvailability) RemoveAllRights(color Color) {
 	}
 }
 
-func (ca *CastleAvailability) Remove(color Color, side string) {
-	if side == "kingside" {
-		if color == White {
-			*ca &= ^KingsideWhiteCastle
-		} else {
-			*ca &= ^KingsideBlackCastle
-		}
-	} else if side == "queenside" {
-		if color == White {
-			*ca &= ^QueensideWhiteCastle
-		} else {
-			*ca &= ^QueensideBlackCastle
-		}
-	}
+func (ca *CastleAvailability) Remove(color Color, side CastleSide) {
+	*ca &^= castleMask[color][side]
 }
 
 func (ca CastleAvailability) String() string {

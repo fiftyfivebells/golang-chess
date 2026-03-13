@@ -36,6 +36,8 @@ const (
 	CapturePromotion
 )
 
+const AttackMoveMask = (1 << Capture) | (1 << EnPassant) | (1 << CapturePromotion)
+
 type Move uint32
 
 func NewMove(from, to Square, pieceType PieceType, moveType MoveType) Move {
@@ -55,7 +57,7 @@ func NewPromotionMove(from, to Square, pieceType, promotionPieceType PieceType, 
 }
 
 func IsAttackMove(moveType MoveType) bool {
-	return moveType == Capture || moveType == EnPassant || moveType == CapturePromotion
+	return (1<<moveType)&AttackMoveMask != 0
 }
 
 func IsPromotionMove(moveType MoveType) bool {

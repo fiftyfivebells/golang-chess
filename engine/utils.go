@@ -76,18 +76,18 @@ var CharToPiece = map[byte]Piece{
 	'k': BlackKing,
 }
 
-var PieceToChar = [Piece]{
-		'P',
-		'N',
-		'B',
-		'R',
-		'Q',
-		'K',
-		'p',
-		'n',
-		'b',
-		'r',
-		'q',
-		'k',
-		'.'
+var PieceToChar = []Piece{
+	'P',
+	'N',
+	'B',
+	'R',
+	'Q',
+	'K',
+	'p',
+	'n',
+	'b',
+	'r',
+	'q',
+	'k',
+	'.',
 }

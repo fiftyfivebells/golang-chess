@@ -110,7 +110,7 @@ func (bb Bitboard) lsb() Square {
 
 func (bb *Bitboard) PopLSB() Square {
 	square := bb.lsb()
-	bb.clearBitAtSquare(square)
+	*bb &= *bb - 1
 
 	return square
 }
