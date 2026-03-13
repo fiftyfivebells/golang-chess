@@ -201,29 +201,49 @@ func (gs *GameState) UnapplyMove(move Move) {
 	}
 	capturedPiece := previous.Destination
 
-	// set the moved piece back where it came from
-	gs.Board.SetPieceAtPosition(movingPiece, from)
-
 	switch moveType {
 	case Quiet:
-		gs.Board.RemovePieceFromSquare(to)
+		mask := SquareMasks[from] | SquareMasks[to]
+		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= mask
+		gs.Board.colorBB[movingPiece.Color] ^= mask
+		gs.Board.occupancy ^= mask
+		gs.Board.squares[from] = movingPiece
+		gs.Board.squares[to] = NoPiece
+		if movingPiece.PieceType == King {
+			gs.Board.kingSq[movingPiece.Color] = from
+		}
 
 	case Capture:
-		gs.Board.RemovePieceFromSquare(to)
-		gs.Board.SetPieceAtPosition(capturedPiece, to)
+		fromBB := SquareMasks[from]
+		toBB := SquareMasks[to]
+		// Move piece back
+		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= fromBB | toBB
+		gs.Board.colorBB[movingPiece.Color] ^= fromBB | toBB
+		gs.Board.occupancy ^= fromBB // from now occupied, to stays occupied
+		gs.Board.squares[from] = movingPiece
+		// Restore captured piece
+		gs.Board.pieces[capturedPiece.Color][capturedPiece.PieceType] |= toBB
+		gs.Board.colorBB[capturedPiece.Color] |= toBB
+		gs.Board.squares[to] = capturedPiece
+		if movingPiece.PieceType == King {
+			gs.Board.kingSq[movingPiece.Color] = from
+		}
 
 	case DoublePush:
 		gs.Board.RemovePieceFromSquare(to)
+		gs.Board.SetPieceAtPosition(movingPiece, from)
 
 	case EnPassant:
 		direction := pawnDirection[gs.ActiveSide]
 		capturedSquare := Square(int(to) - direction)
 
 		gs.Board.RemovePieceFromSquare(to)
+		gs.Board.SetPieceAtPosition(movingPiece, from)
 		gs.Board.SetPieceAtPosition(previous.Destination, capturedSquare)
 
 	case Promotion:
 		gs.Board.RemovePieceFromSquare(to)
+		gs.Board.SetPieceAtPosition(movingPiece, from)
 
 	case CapturePromotion:
 		gs.Board.RemovePieceFromSquare(to)
