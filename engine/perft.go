@@ -21,8 +21,22 @@ func Perft(ps *PerftState, depth int) int64 {
 	gameState := ps.gameState
 	count := gameState.moveGen.GenerateMoves(&ps.moveBuffers[depth], gameState.ActiveSide, gameState.EPSquare, gameState.CastleRights)
 
-	nodes := int64(0)
 	buffer := ps.moveBuffers[depth]
+
+	if depth == 1 {
+		legal := int64(0)
+		for i := range count {
+			move := buffer[i]
+			if gameState.ApplyMove(move) {
+				legal++
+			}
+			gameState.UnapplyMove(move)
+		}
+		return legal
+	}
+
+	nodes := int64(0)
+
 	for i := range count {
 		move := buffer[i]
 		if gameState.ApplyMove(move) {
