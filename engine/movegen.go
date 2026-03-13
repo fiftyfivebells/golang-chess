@@ -5,9 +5,7 @@ type MoveGen struct {
 }
 
 func NewMoveGen(board *Board) *MoveGen {
-	return &MoveGen{
-		board: board,
-	}
+	return &MoveGen{board: board}
 }
 
 func (bmg *MoveGen) GenerateMoves(buf *[256]Move, activeSide Color, enPassant Square, castleAvailability CastleAvailability) int {
@@ -49,7 +47,7 @@ func (bmg *MoveGen) generateMovesByPiece(
 	case Bishop:
 		moves = bmg.board.GetBishopMoves(from, occupied, allies)
 	case Queen:
-		moves = bmg.generateQueenMoves(from, occupied, allies)
+		moves = bmg.board.GetBishopMoves(from, occupied, allies) | bmg.board.GetRookMoves(from, occupied, allies)
 	case King:
 		moves = (KingMoves[from] & ^allies)
 	}
@@ -269,10 +267,6 @@ func (bmg *MoveGen) generateBlackCastles(buf *[256]Move, count int, occupied Bit
 	}
 
 	return count
-}
-
-func (bmg MoveGen) generateQueenMoves(from Square, occupied, allies Bitboard) Bitboard {
-	return bmg.board.GetBishopMoves(from, occupied, allies) | bmg.board.GetRookMoves(from, occupied, allies)
 }
 
 func (bmg *MoveGen) createMovesFromBitboard(

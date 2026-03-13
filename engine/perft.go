@@ -50,6 +50,7 @@ func Perft(ps *PerftState, depth int) int64 {
 }
 
 func PerftTrace(state GameState, depth int, trace []Move) int64 {
+	state.moveGen.board = &state.Board // fix self-referential pointer after value copy
 	if depth == 0 {
 		fmt.Printf("TRACE: %+v\n", trace)
 		return 1

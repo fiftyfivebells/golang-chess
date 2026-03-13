@@ -10,7 +10,7 @@ import (
 )
 
 type UCI struct {
-	state GameState
+	state *GameState
 }
 
 func (u UCI) uciResponse() {
@@ -52,7 +52,7 @@ func (u UCI) perftResponse(command string) {
 	}
 
 	perftState := PerftState{}
-	perftState.gameState = &u.state
+	perftState.gameState = u.state
 
 	PerftDivide(&perftState, depth)
 }

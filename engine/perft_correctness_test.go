@@ -25,7 +25,7 @@ func TestPerftCorrectness(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			state := InitializeGameState(tt.fen)
-			ps := &PerftState{gameState: &state}
+			ps := &PerftState{gameState: state}
 			got := Perft(ps, tt.depth)
 			if got != tt.nodes {
 				t.Errorf("depth %d: got %d, want %d", tt.depth, got, tt.nodes)
