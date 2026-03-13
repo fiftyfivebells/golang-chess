@@ -54,33 +54,40 @@ func CastlingRookPositions(kingFrom, kingTo Square) (rookFrom, rookTo Square) {
 	return rookFrom, rookTo
 }
 
-var CharToPiece = map[byte]Piece{
-	'P': {Pawn, White},
-	'p': {Pawn, Black},
-	'N': {Knight, White},
-	'n': {Knight, Black},
-	'B': {Bishop, White},
-	'b': {Bishop, Black},
-	'R': {Rook, White},
-	'r': {Rook, Black},
-	'Q': {Queen, White},
-	'q': {Queen, Black},
-	'K': {King, White},
-	'k': {King, Black},
+func makePiece(pt PieceType, c Color) Piece {
+	p := uint8(pt) + uint8(c*6)
+
+	return Piece(p)
 }
 
-var PieceToChar = map[Piece]byte{
-	{Pawn, White}:   'P',
-	{Pawn, Black}:   'p',
-	{Knight, White}: 'N',
-	{Knight, Black}: 'n',
-	{Bishop, White}: 'B',
-	{Bishop, Black}: 'b',
-	{Rook, White}:   'R',
-	{Rook, Black}:   'r',
-	{Queen, White}:  'Q',
-	{Queen, Black}:  'q',
-	{King, White}:   'K',
-	{King, Black}:   'k',
-	{None, Blank}:   '.',
+// TODO: I can probably make this an array instead of a map
+var CharToPiece = map[byte]Piece{
+	'P': WhitePawn,
+	'p': BlackPawn,
+	'N': WhiteKnight,
+	'n': BlackKnight,
+	'B': WhiteBishop,
+	'b': BlackBishop,
+	'R': WhiteRook,
+	'r': BlackRook,
+	'Q': WhiteQueen,
+	'q': BlackQueen,
+	'K': WhiteKing,
+	'k': BlackKing,
+}
+
+var PieceToChar = [Piece]{
+		'P',
+		'N',
+		'B',
+		'R',
+		'Q',
+		'K',
+		'p',
+		'n',
+		'b',
+		'r',
+		'q',
+		'k',
+		'.'
 }

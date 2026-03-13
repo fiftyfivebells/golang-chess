@@ -65,7 +65,7 @@ func (b Board) GetFENRepresentation() string {
 		for i := startingSquare; i > startingSquare-8; i-- {
 			piece := b.squares[i]
 
-			if piece.PieceType == None {
+			if piece.Type() == None {
 				emptySquares++
 			} else {
 				if emptySquares > 0 {
@@ -94,8 +94,8 @@ func (b *Board) SetPieceAtPosition(p Piece, square Square) {
 		return
 	}
 
-	color := p.Color
-	pieceType := p.PieceType
+	color := p.Color()
+	pieceType := p.Type()
 
 	b.pieces[color][pieceType].setBitAtSquare(square)
 	b.colorBB[color].setBitAtSquare(square)
@@ -116,9 +116,11 @@ func (b Board) GetPieceAtSquare(sq Square) Piece {
 func (b *Board) RemovePieceFromSquare(square Square) {
 	piece := b.squares[square]
 
-	if piece.PieceType != None {
-		b.pieces[piece.Color][piece.PieceType].clearBitAtSquare(square)
-		b.colorBB[piece.Color].clearBitAtSquare(square)
+	pt := piece.Type()
+	color := piece.Color()
+	if pt != None {
+		b.pieces[color][pt].clearBitAtSquare(square)
+		b.colorBB[color].clearBitAtSquare(square)
 		b.occupancy.clearBitAtSquare(square)
 		b.squares[square] = NoPiece
 	}
@@ -141,14 +143,8 @@ func (b *Board) CastleMove(kingFrom, kingTo Square) {
 		color = Black
 	}
 
-	king := Piece{
-		Color:     color,
-		PieceType: King,
-	}
-	rook := Piece{
-		Color:     color,
-		PieceType: Rook,
-	}
+	king := makePiece(King, color)
+	rook := makePiece(Rook, color)
 
 	b.RemovePieceFromSquare(kingFrom)
 	b.RemovePieceFromSquare(rookFrom)
@@ -164,14 +160,8 @@ func (b *Board) ReverseCastleMove(kingFrom, kingTo Square) {
 		color = Black
 	}
 
-	king := Piece{
-		Color:     color,
-		PieceType: King,
-	}
-	rook := Piece{
-		Color:     color,
-		PieceType: Rook,
-	}
+	king := makePiece(King, color)
+	rook := makePiece(Rook, color)
 
 	b.RemovePieceFromSquare(kingTo)
 	b.RemovePieceFromSquare(rookTo)

@@ -60,47 +60,71 @@ func (pt PieceType) String() string {
 	}
 }
 
-type Piece struct {
-	PieceType PieceType
-	Color     Color
+type Piece byte
+
+const (
+	WhitePawn   = 0
+	WhiteKnight = 1
+	WhiteBishop = 2
+	WhiteRook   = 3
+	WhiteQueen  = 4
+	WhiteKing   = 5
+	BlackPawn   = 6
+	BlackKnight = 7
+	BlackBishop = 8
+	BlackRook   = 9
+	BlackQueen  = 10
+	BlackKing   = 11
+	NoPiece     = 12
+)
+
+func (p Piece) IsDefined() bool {
+	return p < NoPiece
 }
 
-var NoPiece = Piece{
-	PieceType: None,
-	Color:     Blank,
+func (p Piece) Color() Color {
+	if !p.IsDefined() {
+		return Blank
+	} else {
+		return Color(p / 6)
+	}
+}
+
+func (p Piece) Type() PieceType {
+	if !p.IsDefined() {
+		return None
+	} else {
+		return PieceType(p % 6)
+	}
 }
 
 func (p Piece) String() string {
-	if p.Color == White {
-		switch p.PieceType {
-		case Pawn:
-			return "P"
-		case Knight:
-			return "N"
-		case Bishop:
-			return "B"
-		case Rook:
-			return "R"
-		case Queen:
-			return "Q"
-		case King:
-			return "K"
-		}
-	} else if p.Color == Black {
-		switch p.PieceType {
-		case Pawn:
-			return "p"
-		case Knight:
-			return "n"
-		case Bishop:
-			return "b"
-		case Rook:
-			return "r"
-		case Queen:
-			return "q"
-		case King:
-			return "k"
-		}
+	switch p {
+	case WhitePawn:
+		return "P"
+	case WhiteKnight:
+		return "N"
+	case WhiteBishop:
+		return "B"
+	case WhiteRook:
+		return "R"
+	case WhiteQueen:
+		return "Q"
+	case WhiteKing:
+		return "K"
+	case BlackPawn:
+		return "p"
+	case BlackKnight:
+		return "n"
+	case BlackBishop:
+		return "b"
+	case BlackRook:
+		return "r"
+	case BlackQueen:
+		return "q"
+	case BlackKing:
+		return "k"
+
 	}
 
 	return "none"

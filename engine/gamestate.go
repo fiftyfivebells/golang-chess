@@ -69,10 +69,9 @@ func (gs *GameState) ApplyMove(move Move) bool {
 	from := move.FromSquare()
 	to := move.ToSquare()
 
-	movingPiece := Piece{
-		Color:     gs.ActiveSide,
-		PieceType: move.PieceType(),
-	}
+	color := gs.ActiveSide
+	pt := move.PieceType()
+	movingPiece := makePiece(pt, color)
 
 	previous := IrreversibleState{
 		CastleRights: gs.CastleRights,
@@ -87,13 +86,13 @@ func (gs *GameState) ApplyMove(move Move) bool {
 	switch moveType {
 	case Quiet:
 		mask := SquareMasks[from] | SquareMasks[to]
-		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= mask
-		gs.Board.colorBB[movingPiece.Color] ^= mask
+		gs.Board.pieces[color][pt] ^= mask
+		gs.Board.colorBB[color] ^= mask
 		gs.Board.occupancy ^= mask
 		gs.Board.squares[to] = movingPiece
 		gs.Board.squares[from] = NoPiece
-		if movingPiece.PieceType == King {
-			gs.Board.kingSq[movingPiece.Color] = to
+		if pt == King {
+			gs.Board.kingSq[color] = to
 		}
 
 	case Capture:
@@ -101,21 +100,21 @@ func (gs *GameState) ApplyMove(move Move) bool {
 		captured := previous.Destination
 		fromBB := SquareMasks[from]
 		toBB := SquareMasks[to]
-		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= fromBB | toBB
-		gs.Board.colorBB[movingPiece.Color] ^= fromBB | toBB
-		gs.Board.pieces[captured.Color][captured.PieceType] &^= toBB
-		gs.Board.colorBB[captured.Color] &^= toBB
+		gs.Board.pieces[color][pt] ^= fromBB | toBB
+		gs.Board.colorBB[color] ^= fromBB | toBB
+		gs.Board.pieces[captured.Color()][captured.Type()] &^= toBB
+		gs.Board.colorBB[captured.Color()] &^= toBB
 		gs.Board.occupancy &^= fromBB // to stays occupied, now has moving piece
 		gs.Board.squares[to] = movingPiece
 		gs.Board.squares[from] = NoPiece
-		if movingPiece.PieceType == King {
-			gs.Board.kingSq[movingPiece.Color] = to
+		if pt == King {
+			gs.Board.kingSq[color] = to
 		}
 
 	case DoublePush:
 		mask := SquareMasks[from] | SquareMasks[to]
-		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= mask
-		gs.Board.colorBB[movingPiece.Color] ^= mask
+		gs.Board.pieces[color][pt] ^= mask
+		gs.Board.colorBB[color] ^= mask
 		gs.Board.occupancy ^= mask
 		gs.Board.squares[to] = movingPiece
 		gs.Board.squares[from] = NoPiece
@@ -123,20 +122,16 @@ func (gs *GameState) ApplyMove(move Move) bool {
 
 	case CapturePromotion:
 		previous.Destination = gs.Board.squares[to]
-		promotionPiece := Piece{
-			Color:     gs.ActiveSide,
-			PieceType: move.PromotionPieceType(),
-		}
+		promotionPiece := makePiece(move.PromotionPieceType(), gs.ActiveSide)
 		gs.Board.MovePiece(promotionPiece, from, to)
 
 	case Promotion:
-		promotionPiece := Piece{
-			Color:     gs.ActiveSide,
-			PieceType: move.PromotionPieceType(),
-		}
+		promotionPiece := makePiece(move.PromotionPieceType(), gs.ActiveSide)
 		gs.Board.MovePiece(promotionPiece, from, to)
+
 	case CastleKingside, CastleQueenside:
 		gs.Board.CastleMove(from, to)
+
 	case EnPassant:
 		pawnDirection := pawnDirection[gs.ActiveSide]
 
@@ -148,12 +143,12 @@ func (gs *GameState) ApplyMove(move Move) bool {
 	}
 
 	// Update castle rights
-	if movingPiece.PieceType == King || movingPiece.PieceType == Rook || previous.Destination.PieceType == Rook {
+	if pt == King || pt == Rook || previous.Destination.Type() == Rook {
 		gs.UpdateCastleRights(movingPiece, previous.Destination, move)
 	}
 
 	// The halfmove clock gets reset if the move was a capture or if the moved piece was a pawn
-	if IsAttackMove(moveType) || movingPiece.PieceType == Pawn {
+	if IsAttackMove(moveType) || pt == Pawn {
 		gs.HalfMove = 0
 	}
 
@@ -187,38 +182,39 @@ func (gs *GameState) UnapplyMove(move Move) {
 	to := move.ToSquare()
 	moveType := move.MoveType()
 
-	movingPiece := Piece{
-		Color:     gs.ActiveSide,
-		PieceType: move.PieceType(),
-	}
+	color := gs.ActiveSide
+	pt := move.PieceType()
+
+	movingPiece := makePiece(pt, color)
+
 	capturedPiece := previous.Destination
 
 	switch moveType {
 	case Quiet:
 		mask := SquareMasks[from] | SquareMasks[to]
-		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= mask
-		gs.Board.colorBB[movingPiece.Color] ^= mask
+		gs.Board.pieces[color][pt] ^= mask
+		gs.Board.colorBB[color] ^= mask
 		gs.Board.occupancy ^= mask
 		gs.Board.squares[from] = movingPiece
 		gs.Board.squares[to] = NoPiece
-		if movingPiece.PieceType == King {
-			gs.Board.kingSq[movingPiece.Color] = from
+		if pt == King {
+			gs.Board.kingSq[color] = from
 		}
 
 	case Capture:
 		fromBB := SquareMasks[from]
 		toBB := SquareMasks[to]
 		// Move piece back
-		gs.Board.pieces[movingPiece.Color][movingPiece.PieceType] ^= fromBB | toBB
-		gs.Board.colorBB[movingPiece.Color] ^= fromBB | toBB
+		gs.Board.pieces[color][pt] ^= fromBB | toBB
+		gs.Board.colorBB[color] ^= fromBB | toBB
 		gs.Board.occupancy ^= fromBB // from now occupied, to stays occupied
 		gs.Board.squares[from] = movingPiece
 		// Restore captured piece
-		gs.Board.pieces[capturedPiece.Color][capturedPiece.PieceType] |= toBB
-		gs.Board.colorBB[capturedPiece.Color] |= toBB
+		gs.Board.pieces[capturedPiece.Color()][capturedPiece.Type()] |= toBB
+		gs.Board.colorBB[capturedPiece.Color()] |= toBB
 		gs.Board.squares[to] = capturedPiece
-		if movingPiece.PieceType == King {
-			gs.Board.kingSq[movingPiece.Color] = from
+		if pt == King {
+			gs.Board.kingSq[color] = from
 		}
 
 	case DoublePush:
@@ -248,11 +244,11 @@ func (gs *GameState) UnapplyMove(move Move) {
 }
 
 func (gs *GameState) UpdateCastleRights(moved Piece, captured Piece, move Move) {
-	if moved.PieceType == King {
+	if moved.Type() == King {
 		gs.CastleRights.RemoveAllRights(gs.ActiveSide)
-	} else if moved.PieceType == Rook {
+	} else if moved.Type() == Rook {
 		gs.UpdateRookRights(gs.ActiveSide, move.FromSquare())
-	} else if captured.PieceType == Rook {
+	} else if captured.Type() == Rook {
 		gs.UpdateRookRights(gs.ActiveSide.EnemyColor(), move.ToSquare())
 	}
 }
